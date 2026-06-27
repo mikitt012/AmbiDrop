@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Model checkpoints
+checkpoints/
+
+# Datasets
+datasets/
+si_dt_05_preprocessed_full/
+si_tr_s_preprocessed_full/
+*.pt
+
+# Results / outputs
+snr_distribution_fixed/
+snr_distribution_fixed2/
+net_size_comparison/*.png
+net_size_comparison/*.csv
+
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Nested git repos
+ConvTasNet/.git
+ConvTasNet_baseline/.git
+
+# Wandb
+wandb/
+
+# TensorBoard
+runs/
