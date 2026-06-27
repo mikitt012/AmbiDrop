@@ -19,7 +19,7 @@ Output:
 """
 import sys
 import os
-project_root = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement"
+project_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop"
 if project_root not in sys.path:
     sys.path.append(project_root)
 
@@ -471,7 +471,7 @@ class MergedDataset(Dataset):
 
     def __getitem__(self, idx):
         # Load the pre-processed tensor
-        data = torch.load(self.file_list[idx])
+        data = torch.load(self.file_list[idx], map_location="cpu")
         
         # Return noisy, clean, and any ref info you need
         return data['noisy'], data['clean'], data['ref_id'], data['array_name'], data['ex_id']

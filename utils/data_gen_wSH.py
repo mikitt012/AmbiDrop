@@ -320,7 +320,7 @@ for array_idx in train_id:
     r_m = arrays[key]
     mic_relative_loc = shift_closest_to_phi0(r_m, radius=0.1)
 
-    folder_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/val_ds"
+    folder_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/val_ds"
     os.makedirs(folder_path, exist_ok=True)
     for ex in range(167):
         file_name = f"ex{global_idx}.mat"
@@ -332,7 +332,7 @@ for array_idx in train_id:
             continue
 
         dataset_type = "si_dt_05"  # Options: "si_tr_s", "si_et_05", "si_dt_05"
-        folder_name = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/wsj0/si_dt_05"
+        folder_name = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/wsj0/si_dt_05"
 
         global_idx += 1  # increment global index
         # Reverberation time
@@ -594,4 +594,4 @@ for array_idx in train_id:
         print("Finished playing mic_pDirect.")
         '''
 
-#runai-cmd --name datagen2  -g 0.1 --cpu-limit 10 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/data_gen.py"
+#runai-cmd --name datagen2  -g 0.1 --cpu-limit 10 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/data_gen.py"

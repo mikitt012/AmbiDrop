@@ -117,7 +117,7 @@ def compute_spherical_harmonics_matrix(N, theta, phi):
 def _calculate_coefficients(V,N,th,ph,plot):
     V = V.T
     Y = compute_spherical_harmonics_matrix(N, th, ph)
-    # Y_yo = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/Y.npy')
+    # Y_yo = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/Y.npy')
     # Y_yo = Y_yo.T
     # Y = Y_yo
     cnm = np.zeros(((N+1)**2, V.shape[1], V.shape[2]), dtype=np.complex128)
@@ -144,7 +144,7 @@ def _calculate_coefficients(V,N,th,ph,plot):
     # assert is_signal_frequency_sh_valid(cnm, freq_axis=1, sh_axis=0)
 
 
-    # cnm = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/cnm.npy')
+    # cnm = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/cnm.npy')
     # cnm = cnm.transpose(1, 2, 0)
     # nfft = 332
     # cnm = cnm[:, :nfft//2 + 1, :]
@@ -217,12 +217,12 @@ def plot_nmse(mse, freqs, save_path="nmse_plot.png"):
     plt.savefig(save_path, dpi=250)
     print(f"Saved plot to: {save_path}")
 
-steer_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/ATF_mismatch_ds/rigid sphere.mat"
+steer_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/ATF_mismatch_ds/rigid sphere.mat"
 steer_mat = loadmat(steer_path)
 V = steer_mat["V"]          # numpy array, shape (CH, F, Q)
 
 # --- 2. Load grid (theta, phi): 1 x Q ---
-grid_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/utils/Lebvedev2702.mat"
+grid_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/utils/Lebvedev2702.mat"
 grid_mat = loadmat(grid_path)
 th = grid_mat["th"].squeeze()    # shape (Q,)
 ph = grid_mat["ph"].squeeze()    # shape (Q,)

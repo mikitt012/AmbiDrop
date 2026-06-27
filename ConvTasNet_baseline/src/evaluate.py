@@ -23,7 +23,7 @@ from scipy.io import loadmat, savemat
 import wandb
 wandb.login()
 
-checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet_baseline/checkpoints/run_2026-04-09_10-55"
+checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet_baseline/checkpoints/run_2026-04-09_10-55"
 full_checkpoint_path = os.path.join(checkpoint_path, "final.pth.tar")
 
 parser = argparse.ArgumentParser('Evaluate separation performance using Conv-TasNet')
@@ -136,9 +136,9 @@ def evaluate(args):
 
     for j in range(1,3):
         if j == 1:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
         else:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
 
         for test_idx, test_type in enumerate(sorted(os.listdir(data_dir))):
         # for t in range(0,1):
@@ -371,4 +371,4 @@ if __name__ == '__main__':
     evaluate(args)
 
 
-#runai-bgu submit python -n convtasnet-test -c 20 -m 80G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet_baseline/src/evaluate.py"
+#runai-bgu submit python -n convtasnet-test -c 20 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet_baseline/src/evaluate.py"

@@ -26,10 +26,10 @@ wandb.login()
 dropout = "SHChannelDropout"
 
 if dropout == "SHChannelDropout":
-    # checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/checkpoints/run_2026-04-07_10-18" # for uniform dropout
-    checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/checkpoints/run_2026-04-09_08-35" # same, more epochs
+    # checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-07_10-18" # for uniform dropout
+    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-09_08-35" # same, more epochs
 else:
-    checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/checkpoints/run_2026-04-07_15-27" # for pr ch dropout
+    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-07_15-27" # for pr ch dropout
 
 full_checkpoint_path = os.path.join(checkpoint_path, "final.pth.tar")
 
@@ -143,9 +143,9 @@ def evaluate(args):
 
     for j in range(1,3):
         if j == 1:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds'
         else:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds'
 
         for test_idx, test_type in enumerate(sorted(os.listdir(data_dir))):
         # for t in range(0,1):
@@ -162,14 +162,14 @@ def evaluate(args):
             if wandb_active:
                 wandb.init(project="ConvTasNet_experiment", entity="tatarjit-ben-gurion-university-of-the-negev",name=name)
 
-            steering_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/steering"
+            steering_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/steering"
             mat_filename = f"{array_name}.mat"
             steer_path = os.path.join(steering_dir, mat_filename)
             steer_mat = loadmat(steer_path)
             V = steer_mat["V"]          # numpy array, shape (CH, F, Q)
 
             # --- 2. Load grid (theta, phi): 1 x Q ---
-            grid_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/utils/Lebvedev2702.mat"
+            grid_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/utils/Lebvedev2702.mat"
             grid_mat = loadmat(grid_path)
             th = grid_mat["th"].squeeze()    # shape (Q,)
             ph = grid_mat["ph"].squeeze()    # shape (Q,)
@@ -390,4 +390,4 @@ if __name__ == '__main__':
     evaluate(args)
 
 
-#runai-bgu submit python -n sh-convtasnet-test2 -c 20 -m 80G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/src/evaluate.py"
+#runai-bgu submit python -n sh-convtasnet-test2 -c 20 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/src/evaluate.py"

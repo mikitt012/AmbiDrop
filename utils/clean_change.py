@@ -96,117 +96,117 @@ def extract_channel_and_swap(src_dir, dst_dir, mic=True, clean_channel_idx=0):
     print(f"Processed {len(sample_files)} samples. Saved to {dst_dir}")
 
 # train arrays
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/EasyComTest_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/EasyComTest_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/EasyComTest_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/EasyComTest_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_train_ds_preprocessed/random 1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_train_ds_preprocessed/random 1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_train_ds_preprocessed/random 1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_train_ds_preprocessed/random 1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=4)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_train_ds_preprocessed/random 2_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_train_ds_preprocessed/random 2_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_train_ds_preprocessed/random 2_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_train_ds_preprocessed/random 2_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_train_ds_preprocessed/semi circle radius = 0.05_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_train_ds_preprocessed/semi circle radius = 0.05_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_train_ds_preprocessed/semi circle radius = 0.05_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_train_ds_preprocessed/semi circle radius = 0.05_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_train_ds_preprocessed/ULA along Y-axis_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_train_ds_preprocessed/ULA along Y-axis_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_train_ds_preprocessed/ULA along Y-axis_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_train_ds_preprocessed/ULA along Y-axis_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_train_ds_preprocessed/X-shaped_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_train_ds_preprocessed/X-shaped_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_train_ds_preprocessed/X-shaped_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_train_ds_preprocessed/X-shaped_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
 # # test arrays
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/full circle radius = 0.05_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/full circle radius = 0.05_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/full circle radius = 0.05_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/full circle radius = 0.05_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=0)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/plus-shaped_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/plus-shaped_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/plus-shaped_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/plus-shaped_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/random 3_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/random 3_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/random 3_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/random 3_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=4)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/random 4_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/random 4_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/random 4_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/random 4_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=0)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/semi circle radius = 0.1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/semi circle radius = 0.1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/semi circle radius = 0.1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/semi circle radius = 0.1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment3/test_for_test_ds_preprocessed/ULA along X-axis_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/test_for_test_ds_preprocessed/ULA along X-axis_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment3/test_for_test_ds_preprocessed/ULA along X-axis_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/test_for_test_ds_preprocessed/ULA along X-axis_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=4)
 
 # # --- Train arrays ---
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/full_circle_0.1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/full_circle_0.1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/full_circle_0.1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/full_circle_0.1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=0)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/random_1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/random_1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/random_1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/random_1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=4)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/random_2_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/random_2_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/random_2_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/random_2_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/semi_circle_0.05_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/semi_circle_0.05_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/semi_circle_0.05_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/semi_circle_0.05_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/ULA_Y_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/ULA_Y_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/ULA_Y_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/ULA_Y_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_train_ds_preprocessed/X_shaped_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_train_ds_preprocessed/X_shaped_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_train_ds_preprocessed/X_shaped_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_train_ds_preprocessed/X_shaped_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
 # # --- val arrays ---
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/full circle radius = 0.1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/full circle radius = 0.1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/full circle radius = 0.1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/full circle radius = 0.1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=0)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/random 1_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/random 1_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/random 1_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/random 1_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=4)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/random 2_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/random 2_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/random 2_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/random 2_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/semi circle radius = 0.05_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/semi circle radius = 0.05_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/semi circle radius = 0.05_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/semi circle radius = 0.05_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/ULA along Y-axis_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/ULA along Y-axis_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/ULA along Y-axis_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/ULA along Y-axis_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=2)
 
-# src_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment1/experiment_val_ds_preprocessed/X-shaped_preprocessed"
-# dst_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2/experiment_val_ds_preprocessed/X-shaped_preprocessed"
+# src_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment1/experiment_val_ds_preprocessed/X-shaped_preprocessed"
+# dst_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2/experiment_val_ds_preprocessed/X-shaped_preprocessed"
 # extract_channel_and_swap(src_folder, dst_folder, clean_channel_idx=1)
 
 # --------- full anm experiment ---------
 # --- test of train arrays ---
-# folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap"
+# folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap"
 # mic = False
 for i in range(1, 3):
     if i == 1:
         # --- mic training ---
-        folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_train_ds_preprocessed_swap"
+        folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_train_ds_preprocessed_swap"
         mic = True
     else:
         # --- mic validation ---
-        folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_val_ds_preprocessed_swap"
+        folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_val_ds_preprocessed_swap"
         mic = True
 
     array_type = "front hemisphere1 (rigid) radius = 0.1_preprocessed"
@@ -280,7 +280,7 @@ for i in range(1, 3):
     extract_channel_and_swap(src_folder, dst_folder, mic=mic, clean_channel_idx=idx-1)
 
 # # --- test of test arrays ---
-# folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap"
+# folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap"
 # mic = False
 
 # array_type = "front hemisphere2 (rigid) radius = 0.1_preprocessed"
@@ -367,6 +367,6 @@ for i in range(1, 3):
 # dst_folder = os.path.join(folder + "_swap", array_type)
 # extract_channel_and_swap(src_folder, dst_folder, mic=mic, clean_channel_idx=idx-1)
 
-#runai-cmd --name ref-change  -g 0.1 --cpu-limit 20 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/clean_change.py"
-#runai-bgu submit python -n clean-change2 -c 20 -m 40G -g 0.2 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/clean_change.py"
+#runai-cmd --name ref-change  -g 0.1 --cpu-limit 20 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/clean_change.py"
+#runai-bgu submit python -n clean-change2 -c 20 -m 40G -g 0.2 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/clean_change.py"
 

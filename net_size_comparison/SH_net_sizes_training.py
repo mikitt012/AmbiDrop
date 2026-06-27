@@ -786,7 +786,7 @@ class FT_JNF(nn.Module):
 
 print('loading data', datetime.now())
 torch.manual_seed(0)
-data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement'
+data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop'
 # train_ds = SimDS(data_dir, 'si_tr_s')
 # val_ds = SimDS(data_dir, 'si_dt_05')
 train_ds = SimDS_preprocessed(data_dir, 'si_tr_s_preprocessed_full')
@@ -869,7 +869,7 @@ for h1, h2 in model_sizes:
 
     max_files_to_process = 6000  # Limit for both training and validation
 
-    # checkpoint_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement"
+    # checkpoint_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop"
     # checkpoint_path = max(
     #     [os.path.join(checkpoint_dir, f) for f in os.listdir(checkpoint_dir) if f.startswith("SH_FT_JNF") and f.endswith(".pt")],
     #     default=None,
@@ -942,13 +942,13 @@ for h1, h2 in model_sizes:
 
             if total_val_loss < prev_loss:
                 prev_loss = total_val_loss
-                save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints"
+                save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints"
                 os.makedirs(save_dir, exist_ok=True)
                 filename = 'SH_FT_JNF,{date:%Y-%m-%d_%H-%M-%S}.pt'.format(date=current_time)
                 # filename = total_params
                 checkpoint_path = os.path.join(save_dir, filename)
                 if os.path.exists(checkpoint_path):
-                    checkpoint_list = torch.load(checkpoint_path)  # Load existing checkpoints
+                    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")  # Load existing checkpoints
                 else:
                     checkpoint_list = []  # Start with an empty list if no checkpoint exists
                 checkpoint_data = {
@@ -964,7 +964,7 @@ for h1, h2 in model_sizes:
                 print(f'Model saved as {filename}')
             print(f"Epoch {epoch + 1}: Training Loss = {total_train_loss:.4f}, Validation Loss = {total_val_loss:.4f}")
             # if (epoch + 1) % 20 == 0:
-            #     save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/dropout_plot"
+            #     save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/dropout_plot"
             #     save_path = f"{save_dir}/dropout_masks_epoch_{epoch+1}.png"
             #     net.channel_dropout.visualize_masks(save_path=save_path)
         wandb.log({"train_loss": total_train_loss, "val_loss": total_val_loss}, step=epoch+1)
@@ -981,6 +981,6 @@ for h1, h2 in model_sizes:
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-#runai-cmd --name train-SH  -g 1 --cpu-limit 30 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_hanan.py"
+#runai-cmd --name train-SH  -g 1 --cpu-limit 30 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_hanan.py"
 
-#runai-bgu submit python -n full-train -c 40 -m 60G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/SH_net_sizes_training.py"
+#runai-bgu submit python -n full-train -c 40 -m 60G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/SH_net_sizes_training.py"

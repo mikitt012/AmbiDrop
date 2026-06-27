@@ -259,7 +259,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -777,7 +777,7 @@ class PreprocessedSHDataset(Dataset):
 
     def __getitem__(self, idx):
         # each .pt contains a tuple (clean_ch0, noisy_speech_tf)
-        clean_real_ch0, noisy_speech_tf = torch.load(self.samples[idx])
+        clean_real_ch0, noisy_speech_tf = torch.load(self.samples[idx], map_location="cpu")
         max_val = noisy_speech_tf.abs().max().item()
         noisy_speech_tf = noisy_speech_tf / max_val
         clean_real_ch0 = clean_real_ch0/max_val
@@ -979,126 +979,126 @@ for t in range(0,1):
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
     if t == 1:
         drop_prob = 0.7
         max_drop = 7
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
     if t == 2:
         drop_prob = 0.6
         max_drop = 7
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
     if t == 3:
         drop_prob = 0.5
         max_drop = 6
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
     if t == 4:
         drop_probs = [0, 0.55, 0.9, 0.6, 1, 1, 1, 1, 1] # th = -10 dB
         th = -10 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
     if t == 5:
         drop_probs = [0, 0.35, 0.75, 0.2, 1, 1, 1, 1, 1] # th = -8.2 dB
         th = -8.2 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
     if t == 6:
         drop_probs = [0, 0.15, 0.6, 0.2, 0.95, 1, 0.95, 1, 0.95] # th = -7 dB
         th = -7 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
     if t == 7:
         drop_probs = [0, 0.15, 0.55, 0.15, 0.8, 1, 0.95, 1, 0.85] # th = -5.7 dB
         th = -5.7 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
     if t == 8:
         drop_probs = [0, 0.1, 0.45, 0.15, 0.7, 1, 0.85, 1, 0.65] # th = -5 dB
         th = -5 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
     if t == 9:
         drop_probs = [0, 0.1, 0.45, 0.1, 0.55, 1, 0.85, 1, 0.55] # th = -4.2 dB
         th = -4.2 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
     if t == 10:
         drop_probs = [0, 0.1, 0.45, 0.1, 0.45, 1, 0.75, 1, 0.45] # th = -3.4 dB
         th = -3.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
     if t == 11:
         drop_probs = [0, 0.05, 0.45, 0.05, 0.4, 0.95, 0.5, 0.95, 0.4] # th = -2.4 dB
         th = -2.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
     if t == 12:
         drop_probs = [0, 0.05, 0.45, 0.05, 0.1, 0.75, 0.4, 0.75, 0.1] # th = -1.4 dB
         th = -1.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
     if t == 13:
         drop_probs = [0, 0.05, 0.35, 0.05, 0, 0.4, 0, 0.3, 0] # th = 0 dB
         th = 0 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
     if t == 14:
         drop_prob = 0.4
         max_drop = 7
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-21_17-36-40.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-21_17-36-40.pt"
     if t == 15:
         drop_prob = 0.3
         max_drop = 6
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-22_14-53-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-22_14-53-29.pt"
     if t == 16:
         drop_prob = 0.7
         max_drop = 3
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-23_05-06-54.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-23_05-06-54.pt"
     if t == 17:
         drop_prob = 0
         max_drop = 0
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-23_13-38-21.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-23_13-38-21.pt"
 
     smallnet = True
 
@@ -1127,24 +1127,24 @@ for t in range(0,1):
 
     model_type = "_dropout_fullanm"  # regular / dropout
     # if model_type == "_regular":
-    #     checkpoint = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints_old/SH_FT_JNF_partial_paper.pt")
+    #     checkpoint = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints_old/SH_FT_JNF_partial_paper.pt", map_location="cpu")
     # if model_type == "_dropout":
-    #     checkpoint = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-08-09_11-00-08.pt")
+    #     checkpoint = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-08-09_11-00-08.pt")
     # if model_type == "_dropout_fullanm":
     #     if smallnet:
-    #         checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+    #         checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
     #     else:   
-    #         checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_09-21-33.pt"
+    #         checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_09-21-33.pt"
     #     chosen_epoch = load_checkpoint(checkpoint_path, target_epoch=300, net=net)
     #     print(chosen_epoch)
 
     # net.load_state_dict(checkpoint['model_state_dict'])
     # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-    # data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap' 
+    # data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap' 
     # test_type = 'front hemisphere1 (rigid) radius = 0.1_preprocessed'
     # # test_ds = SimDS(data_dir,'test_data_SH')
-    # # max_len_train = find_max_length('/gpfs0/bgu-br/users/tatarjit/speech-enhancement', 'train_data_SH', ambisonics=True)
+    # # max_len_train = find_max_length('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop', 'train_data_SH', ambisonics=True)
     # # test_ds = SimDS_preprocessed(data_dir, 'si_et_05_preprocessed_full')
     # test_ds = SimDS_preprocessed(data_dir, test_type)
     # # test_ds = PreprocessedSHDataset(data_dir, "test_data_SH_STFT")
@@ -1172,90 +1172,46 @@ for t in range(0,1):
         # if t == 4 and i == 1:å
         #     continue   # skip i=1 when t=4
         if j == 1:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
         else:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
 
-        all_test_types = sorted(os.listdir(data_dir))
+        REF_IDX_MAP = {
+            "front hemisphere1 (rigid) radius = 0.1_preprocessed": 1,
+            "full circle (rigid) radius = 0.1_preprocessed": 1,
+            "planar_preprocessed": 6,
+            "random 2D array1 radius = 0.1_preprocessed": 6,
+            "random sphere1 radius = 0.1_preprocessed": 7,
+            "random sphere3 (rigid) radius = 0.1_preprocessed": 4,
+            "random sphere5 (rigid) radius = 0.05_preprocessed": 2,
+            "semi circle planar radius = 0.05_preprocessed": 6,
+            "ULA along X-axis_preprocessed": 7,
+            "uniform sphere (rigid) radius = 0.1_preprocessed": 2,
+            "front hemisphere2 (rigid) radius = 0.1_preprocessed": 1,
+            "planar (rot=45deg)_preprocessed": 5,
+            "random 2D array2 radius = 0.1_preprocessed": 2,
+            "random sphere2 radius = 0.1_preprocessed": 2,
+            "random sphere4 (rigid) radius = 0.1_preprocessed": 7,
+            "random sphere6 (rigid) radius = 0.05_preprocessed": 4,
+            "semi circle (rigid) radius = 0.1_preprocessed": 4,
+            "ULA along Z-axis_preprocessed": 4,
+            "uniform sphere (rigid) radius = 0.05_preprocessed": 2,
+            "semi circle planar radius = 0.1_preprocessed": 6,
+            "Aria on rigid sphere (simulated)_preprocessed": 3,
+            "ULA along Y-axis (tilt=30deg)_preprocessed": 4,
+            "ULA along x-axis (rot=30deg)_preprocessed": 7,
+            "ULA along y-axis_preprocessed": 4,
+            "ULA along X-axis (tilt=20)_preprocessed": 7,
+        }
 
-        for test_idx, test_type in enumerate(all_test_types):   
-            # test_type = "Aria on rigid sphere (simulated)_preprocessed"
-            # test_idx = 1
+        all_test_types = sorted([d for d in os.listdir(data_dir)
+                                 if os.path.isdir(os.path.join(data_dir, d))])
 
-            if test_type == "front hemisphere1 (rigid) radius = 0.1_preprocessed":
-                ref_idx = 1
-
-            if test_type == "full circle (rigid) radius = 0.1_preprocessed":
-                ref_idx = 1
-
-            if test_type == "planar_preprocessed":
-                ref_idx = 6
-
-            if test_type == "random 2D array1 radius = 0.1_preprocessed":
-                ref_idx = 6
-
-            if test_type == "random sphere1 radius = 0.1_preprocessed":
-                ref_idx = 7
-
-            if test_type == "random sphere3 (rigid) radius = 0.1_preprocessed":
-                ref_idx = 4
-
-            if test_type == "random sphere5 (rigid) radius = 0.05_preprocessed":
-                ref_idx = 2
-
-            if test_type == "semi circle planar radius = 0.05_preprocessed":
-                ref_idx = 6
-
-            if test_type == "ULA along X-axis_preprocessed":
-                ref_idx = 7
-
-            if test_type == "uniform sphere (rigid) radius = 0.1_preprocessed":
-                ref_idx = 2
-
-            if test_type == "front hemisphere2 (rigid) radius = 0.1_preprocessed":
-                ref_idx = 1
-
-            if test_type == "planar (rot=45deg)_preprocessed":
-                ref_idx = 5
-
-            if test_type == "random 2D array2 radius = 0.1_preprocessed":
-                ref_idx = 2
-
-            if test_type == "random sphere2 radius = 0.1_preprocessed":
-                ref_idx = 2
-
-            if test_type == "random sphere4 (rigid) radius = 0.1_preprocessed":
-                ref_idx = 7
-
-            if test_type == "random sphere6 (rigid) radius = 0.05_preprocessed":
-                ref_idx = 4
-
-            if test_type == "semi circle (rigid) radius = 0.1_preprocessed":
-                ref_idx = 4
-
-            if test_type == "ULA along Z-axis_preprocessed":
-                ref_idx = 4
-
-            if test_type == "uniform sphere (rigid) radius = 0.05_preprocessed":
-                ref_idx = 2
-
-            if test_type == "semi circle planar radius = 0.1_preprocessed":
-                ref_idx = 6
-
-            if test_type == "Aria on rigid sphere (simulated)_preprocessed":
-                ref_idx = 3
-
-            if test_type == "ULA along Y-axis (tilt=30deg)_preprocessed":
-                ref_idx = 4
-                
-            if test_type == "ULA along x-axis (rot=30deg)_preprocessed":
-                ref_idx = 7
-
-            if test_type == "ULA along y-axis_preprocessed":
-                ref_idx = 4
-
-            if test_type == "ULA along X-axis (tilt=20)_preprocessed":
-                ref_idx = 7
+        for test_idx, test_type in enumerate(all_test_types):
+            if test_type not in REF_IDX_MAP:
+                print(f"Skipping unknown test type: {test_type}")
+                continue
+            ref_idx = REF_IDX_MAP[test_type]
 
             ref_id = ref_idx - 1
 
@@ -1312,7 +1268,7 @@ for t in range(0,1):
                 Ms = Ms.squeeze()
 
                 # mask = Ms.detach().cpu()
-                # mask_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/models_interp/FT_JNF"
+                # mask_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/models_interp/FT_JNF"
                 # save_path = os.path.join(mask_dir, f"mask_{test_type}_{i}.pt")
                 # torch.save({'mask': mask}, save_path)
 
@@ -1373,7 +1329,7 @@ for t in range(0,1):
                     master_si_sdr_enhanced[test_idx + 10, i] = val_enhanced.item() if torch.is_tensor(val_enhanced) else val_enhanced
 
                 break
-            break
+            # break
             
             if wandb_active:
                 wandb.log({
@@ -1401,12 +1357,12 @@ for t in range(0,1):
             print(f"SI-SDR: {si_sdr_enhanced.mean()}")
             plt.show()
 
-            # break
+            break
         # break
 
 print(f"Shape of master_si_sdr_noisy: {master_si_sdr_noisy.shape}")
 
-base_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/snr_distribution_fixed2"
+base_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/snr_distribution_fixed2"
 if plot_snr_dist:
     if not os.path.exists(base_path):
         os.makedirs(base_path)
@@ -1582,14 +1538,14 @@ if plot_snr_dist:
 
 # scipy.io.savemat("result1.mat", {"noisy": y, "enhanced": s_hat, "clean": s1})
 # 
-# save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/recordings/"  # or any desired folder path
-# save_dir = os.path.join("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/recordings/", test_type)
+# save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/recordings/"  # or any desired folder path
+# save_dir = os.path.join("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/recordings/", test_type)
 # os.makedirs(save_dir, exist_ok=True)  # make sure the folder exists
 
 # scipy.io.wavfile.write(os.path.join(save_dir, "clean.wav"), 16000, s1.cpu().numpy().astype('float32'))
 # scipy.io.wavfile.write(os.path.join(save_dir, "enhanced.wav"), 16000, s_hat.cpu().numpy().astype('float32'))
 # scipy.io.wavfile.write(os.path.join(save_dir, "noisy.wav"), 16000, y.cpu().numpy().astype('float32'))
 
-#runai-cmd --name test-dropout  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/test_SH_FT_JNF.py"
+#runai-cmd --name test-dropout  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/test_SH_FT_JNF.py"
 
-#runai-bgu submit python -n ambidrop-test -c 20 -m 40G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/test_SH_FT_JNF.py"
+#runai-bgu submit python -n ambidrop-test -c 20 -m 40G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/test_SH_FT_JNF.py"

@@ -786,7 +786,7 @@ class FT_JNF(nn.Module):
 
 print('loading data', datetime.now())
 torch.manual_seed(0)
-data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement'
+data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop'
 # train_ds = SimDS(data_dir, 'si_tr_s')
 # val_ds = SimDS(data_dir, 'si_dt_05')
 train_ds = SimDS_preprocessed(data_dir, 'si_tr_s_preprocessed_full')
@@ -808,91 +808,91 @@ for t in range(4,14):
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
     if t == 2:
         drop_prob = 0.6
         max_drop = 7
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
     if t == 3:
         drop_prob = 0.5
         max_drop = 6
         drop_probs = []
         th = 0
         dropout = "SHChannelDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
     if t == 4:
         drop_probs = [0, 0.55, 0.9, 0.6, 1, 1, 1, 1, 1] # th = -10 dB
         th = -10 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
     if t == 5:
         drop_probs = [0, 0.35, 0.75, 0.2, 1, 1, 1, 1, 1] # th = -8.2 dB
         th = -8.2 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
     if t == 6:
         drop_probs = [0, 0.15, 0.6, 0.2, 0.95, 1, 0.95, 1, 0.95] # th = -7 dB
         th = -7 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
     if t == 7:
         drop_probs = [0, 0.15, 0.55, 0.15, 0.8, 1, 0.95, 1, 0.85] # th = -5.7 dB
         th = -5.7 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
     if t == 8:
         drop_probs = [0, 0.1, 0.45, 0.15, 0.7, 1, 0.85, 1, 0.65] # th = -5 dB
         th = -5 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
     if t == 9:
         drop_probs = [0, 0.1, 0.45, 0.1, 0.55, 1, 0.85, 1, 0.55] # th = -4.2 dB
         th = -4.2 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
     if t == 10:
         drop_probs = [0, 0.1, 0.45, 0.1, 0.45, 1, 0.75, 1, 0.45] # th = -3.4 dB
         th = -3.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
     if t == 11:
         drop_probs = [0, 0.05, 0.45, 0.05, 0.4, 0.95, 0.5, 0.95, 0.4] # th = -2.4 dB
         th = -2.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
     if t == 12:
         drop_probs = [0, 0.05, 0.45, 0.05, 0.1, 0.75, 0.4, 0.75, 0.1] # th = -1.4 dB
         th = -1.4 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
     if t == 13:
         drop_probs = [0, 0.05, 0.35, 0.05, 0, 0.4, 0, 0.3, 0] # th = 0 dB
         th = 0 # dB
         drop_prob = 0
         max_drop = 0
         dropout = "PerChDropout"
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
 
     trainloader = DataLoader(train_ds, sampler=train_sampler, batch_size=batch_size, drop_last=True)
     valloader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, drop_last=True)
@@ -960,7 +960,7 @@ for t in range(4,14):
 
     max_files_to_process = 6000  # Limit for both training and validation
 
-    # checkpoint_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement"
+    # checkpoint_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop"
     # checkpoint_path = max(
     #     [os.path.join(checkpoint_dir, f) for f in os.listdir(checkpoint_dir) if f.startswith("SH_FT_JNF") and f.endswith(".pt")],
     #     default=None,
@@ -1033,12 +1033,12 @@ for t in range(4,14):
 
             if total_val_loss < prev_loss:
                 prev_loss = total_val_loss
-                save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints"
+                save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints"
                 os.makedirs(save_dir, exist_ok=True)
                 filename = 'SH_FT_JNF,{date:%Y-%m-%d_%H-%M-%S}.pt'.format(date=current_time)
                 checkpoint_path = os.path.join(save_dir, filename)
                 if os.path.exists(checkpoint_path):
-                    checkpoint_list = torch.load(checkpoint_path)  # Load existing checkpoints
+                    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")  # Load existing checkpoints
                 else:
                     checkpoint_list = []  # Start with an empty list if no checkpoint exists
                 checkpoint_data = {
@@ -1054,7 +1054,7 @@ for t in range(4,14):
                 print(f'Model saved as {filename}')
             print(f"Epoch {epoch + 1}: Training Loss = {total_train_loss:.4f}, Validation Loss = {total_val_loss:.4f}")
             # if (epoch + 1) % 20 == 0:
-            #     save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/dropout_plot"
+            #     save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/dropout_plot"
             #     save_path = f"{save_dir}/dropout_masks_epoch_{epoch+1}.png"
             #     net.channel_dropout.visualize_masks(save_path=save_path)
         wandb.log({"train_loss": total_train_loss, "val_loss": total_val_loss}, step=epoch+1)
@@ -1063,6 +1063,6 @@ for t in range(4,14):
     wandb.finish()
     writer.close()
 
-#runai-cmd --name train-SH  -g 1 --cpu-limit 30 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_hanan.py"
+#runai-cmd --name train-SH  -g 1 --cpu-limit 30 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_hanan.py"
 
-#runai-bgu submit python -n full-train2 -c 40 -m 60G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_hanan2.py"
+#runai-bgu submit python -n full-train2 -c 40 -m 60G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_hanan2.py"

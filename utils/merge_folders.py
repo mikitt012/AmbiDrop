@@ -28,10 +28,10 @@ def merge_folders(root_input_folder, output_folder):
     
     print(f"All files merged into: {output_folder}")
 
-root_input_folder = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_train_ds_preprocessed'
-output_folder = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_train_ds_preprocessed_merged'
+root_input_folder = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_train_ds_preprocessed'
+output_folder = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_train_ds_preprocessed_merged'
 
 merge_folders(root_input_folder, output_folder)
 
-#runai-cmd --name merge2  -g 0.1 --cpu-limit 20 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/merge_folders.py"
-#runai-bgu submit python -n merge -c 20 -m 40G -g 0.2 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/merge_folders.py"
+#runai-cmd --name merge2  -g 0.1 --cpu-limit 20 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/merge_folders.py"
+#runai-bgu submit python -n merge -c 20 -m 40G -g 0.2 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/merge_folders.py"

@@ -158,16 +158,16 @@ def preprocess_and_save(
     print(f"Saved {len(mat_files)} preprocessed files to {out_folder}")
 
 # preprocess_and_save(
-#     data_dir   = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement",
+#     data_dir   = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop",
 #     data_type  = "test_data_SH",
 #     max_len    = 120000,
 #     ambisonics = True,
-#     out_root   = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement",
+#     out_root   = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop",
 #     start_idx=0,
 #     end_idx=None
 # )
 
-# clean_ch0, _ = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_data_SH_STFT/Ambisonics_06310.pt", map_location="cpu")
+# clean_ch0, _ = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_data_SH_STFT/Ambisonics_06310.pt", map_location="cpu")
 # sr = 16000  # your sampling rate
 # scipy.io.wavfile.write("clean_ch0_.wav", 16000, clean_ch0.cpu().numpy().astype('float32'))
 
@@ -351,14 +351,14 @@ def preprocess_and_save_to_folder(data_dir, data_type, train, out_root, max_leng
 
 # preprocess_and_save_to_folder(
 #     # data_dir = '/gpfs0/bgu-br/projects/sim_dataset_ambisonics/',
-#     data_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2",
+#     data_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2",
 #     data_type = "val_ds",
 #     train = True,
-#     out_root = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment2"
+#     out_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment2"
 # )
 
-data_root = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_train_ds"
-out_root = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_train_ds_preprocessed"
+data_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_train_ds"
+out_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_train_ds_preprocessed"
 
 for data_type in sorted(os.listdir(data_root)):
     input_path = os.path.join(data_root, data_type)
@@ -402,8 +402,8 @@ def check_tensor_shapes(preprocessed_folder):
 
     return unique_lengths
 
-# check_tensor_shapes('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/si_dt_05_preprocessed')
+# check_tensor_shapes('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/si_dt_05_preprocessed')
 
 
-#runai-cmd --name prepro  -g 0.2 --cpu-limit 20 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/mic_data_process.py"
-#runai-bgu submit python -n prepro -c 20 -m 40G -g 0.2 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/utils/mic_data_process.py"
+#runai-cmd --name prepro  -g 0.2 --cpu-limit 20 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/mic_data_process.py"
+#runai-bgu submit python -n prepro -c 20 -m 40G -g 0.2 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/utils/mic_data_process.py"

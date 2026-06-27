@@ -132,7 +132,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -378,30 +378,30 @@ else:
     ).to(device)
 
 # Load the checkpoint
-# checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-08-07_08-22-02.pt"
-# checkpoint = torch.load(checkpoint_path)
+# checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-08-07_08-22-02.pt"
+# checkpoint = torch.load(checkpoint_path, map_location="cpu")
 # net.load_state_dict(checkpoint['model_state_dict'])
 # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 if smallnet:
-    # checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-12-01_09-21-58.pt"
-    # checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-12-29_14-41-04.pt"
-    checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
+    # checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-12-01_09-21-58.pt"
+    # checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-12-29_14-41-04.pt"
+    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
 else:
-    checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-11-30_14-41-59.pt"
+    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-11-30_14-41-59.pt"
 chosen_epoch = load_checkpoint(checkpoint_path, target_epoch=300, net=net)
 print(chosen_epoch)
 
-# data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap' 
+# data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap' 
 # test_type = 'uniform sphere (rigid) radius = 0.05_preprocessed'
 # test_ds = SimDS_preprocessed(data_dir, test_type)
 # testloader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
 for j in range(2,3):
     if j == 1:
-        data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
+        data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed'
     else:
-        data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
+        data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed'
     
     # test_type = "ULA along X-axis_preprocessed"
     for test_type in sorted(os.listdir(data_dir)):
@@ -599,6 +599,6 @@ for j in range(2,3):
         # break
     # break
 
-#runai-cmd --name test-regular  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/Test_FT_JNF.py"
-#runai-bgu submit python -n baseline-test -c 20 -m 80G -g 0.2 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/Test_FT_JNF.py"
+#runai-cmd --name test-regular  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/Test_FT_JNF.py"
+#runai-bgu submit python -n baseline-test -c 20 -m 80G -g 0.2 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/Test_FT_JNF.py"
 

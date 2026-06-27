@@ -364,7 +364,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -792,7 +792,7 @@ def plot_nmse(mse, freqs, save_path="nmse_plot.png"):
     plt.savefig(save_path, dpi=250)
     print(f"Saved plot to: {save_path}")
 
-def sweep_alignment_sisdr(s1, s_hat, fs, t0, ranges, save_path="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/sisdr_vs_shift.png"):
+def sweep_alignment_sisdr(s1, s_hat, fs, t0, ranges, save_path="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/sisdr_vs_shift.png"):
     """
     s1  : reference clean signal (1D)
     s_hat : enhanced signal (1D)
@@ -1040,8 +1040,8 @@ if __name__ == "__main__":
 
     # ----- CONFIG -----
     AmbiDrop = False
-    root_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds"
-    steering_folder = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/mic_count_ablation/mic_count/steering"
+    root_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds"
+    steering_folder = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/mic_count_ablation/mic_count/steering"
     train = False
     max_length_sec = 6
     sample_rate = 16000
@@ -1050,11 +1050,11 @@ if __name__ == "__main__":
     if AmbiDrop:
         model_type = "AmbiDrop"
         ch_num = 18
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
     else:
         model_type = "baseline"
         ch_num = 14
-        checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
+        checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
     
     smallnet = True
 
@@ -1140,7 +1140,7 @@ if __name__ == "__main__":
             V = steer_mat["V"]          # numpy array, shape (CH, F, Q)
 
             # --- 2. Load grid (theta, phi): 1 x Q ---
-            grid_path = os.path.join("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/utils", "Lebvedev2702.mat")
+            grid_path = os.path.join("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/utils", "Lebvedev2702.mat")
             grid_mat = loadmat(grid_path)
             th = grid_mat["th"].squeeze()    # shape (Q,)
             ph = grid_mat["ph"].squeeze()    # shape (Q,)
@@ -1243,7 +1243,7 @@ if __name__ == "__main__":
             plot_snr_dist = False
 
             if plot_snr_dist:
-                base_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds"
+                base_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds"
                 save_path = os.path.join(base_path, "si_sdr_noisy_05.npy")
                 np.save(save_path, si_sdr_noisy)
                 print(f"Data saved successfully to {save_path}")
@@ -1347,7 +1347,7 @@ if __name__ == "__main__":
                 ]
 
                 # 6. Save and Display
-                base_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds"
+                base_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds"
                 save_file = os.path.join(base_path, 'si-sdr distribution across examples of aria 05.csv')
                 summary.to_csv(save_file, index=False)
                 print("Performance summary saved to 'si-sdr distribution across examples of aria 05.csv'")
@@ -1355,7 +1355,7 @@ if __name__ == "__main__":
                 print(summary.to_string(index=False))
 
                 # Example Usage:
-                base_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds"
+                base_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds"
                 csv_file = os.path.join(base_path, 'si-sdr distribution across examples of aria 05.csv')
                 png_file = os.path.join(base_path, 'si-sdr distribution across examples of aria 05.png')
 
@@ -1365,6 +1365,6 @@ if __name__ == "__main__":
             # break
         # break
 
-#rsync -avh --progress "/Users/mikitatarjitzky/Documents/aria/projectaria_client_sdk_samples/mixed_data/" tatarjit@bhn20:/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/mixed_data
+#rsync -avh --progress "/Users/mikitatarjitzky/Documents/aria/projectaria_client_sdk_samples/mixed_data/" tatarjit@bhn20:/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/mixed_data
 
-#runai-bgu submit python -n mic-count -c 20 -m 40G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/test_mic_count.py"
+#runai-bgu submit python -n mic-count -c 20 -m 40G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/test_mic_count.py"

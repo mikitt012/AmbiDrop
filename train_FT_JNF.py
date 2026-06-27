@@ -143,7 +143,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
 
     if target_epoch is None:
         # Load the latest checkpoint (i.e., the one with the highest epoch)
@@ -433,7 +433,7 @@ print('finish section', datetime.now())
 
 print('loading data', datetime.now())
 torch.manual_seed(0)
-data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm'
+data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm'
 # train_ds = SimDS(data_dir, 'si_tr_s')
 # val_ds = SimDS(data_dir, 'si_dt_05')
 # train_ds = SimDS_preprocessed(data_dir, 'train_circle_preprocessed_merged')
@@ -495,14 +495,14 @@ print(f"Number of parameters: {total_params}")
 print('finish loading model', datetime.now())
 print('start training', datetime.now())
 
-# checkpoint = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-08-14_10-26-56.pt")
+# checkpoint = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-08-14_10-26-56.pt")
 # net.load_state_dict(checkpoint['model_state_dict'])
 # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 # prev_loss = checkpoint['loss']
 
 # target_epoch_to_load = 100
 
-# checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2025-08-24_08-33-26.pt"
+# checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2025-08-24_08-33-26.pt"
 # load_checkpoint(checkpoint_path, target_epoch = None, net=net, optimizer=optimizer)
 
 # load_checkpoint(checkpoint_path, target_epoch=None, net=net, optimizer=optimizer, scheduler=scheduler)
@@ -543,12 +543,12 @@ for epoch in range(ephocs):
 
         if total_val_loss < prev_loss:
             prev_loss = total_val_loss
-            save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints"
+            save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints"
             os.makedirs(save_dir, exist_ok=True)
             filename = 'FT_JNF,{date:%Y-%m-%d_%H-%M-%S}.pt'.format(date=current_time)
             checkpoint_path = os.path.join(save_dir, filename)
             if os.path.exists(checkpoint_path):
-                checkpoint_list = torch.load(checkpoint_path)  # Load existing checkpoints
+                checkpoint_list = torch.load(checkpoint_path, map_location="cpu")  # Load existing checkpoints
             else:
                 checkpoint_list = []  # Start with an empty list if no checkpoint exists
             checkpoint_data = {
@@ -569,9 +569,9 @@ print('Finished Training')
 wandb.finish()
 writer.close()
 
-#runai-cmd --name train-mic-model  -g 0.7 --cpu-limit 40 --memory-limit 40Gi -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_FT_JNF.py"
+#runai-cmd --name train-mic-model  -g 0.7 --cpu-limit 40 --memory-limit 40Gi -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_FT_JNF.py"
 
-#runai-bgu submit python -n baseline -c 40 -m 80G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/train_FT_JNF.py"
+#runai-bgu submit python -n baseline -c 40 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/train_FT_JNF.py"
 
 
 

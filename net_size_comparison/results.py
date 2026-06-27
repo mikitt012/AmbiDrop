@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import glob
 import numpy as np
 
-directory="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/net_size_comparison"
+directory="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/net_size_comparison"
 
 csv_files = glob.glob(os.path.join(directory, "metrics_params_*.csv"))
 
@@ -156,7 +156,7 @@ def plot_model_comparison(directory="."):
     plt.savefig("net_size_comparison/model_performance_comparison.png", dpi=300)
     plt.show()
 
-# plot_model_comparison(directory="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/net_size_comparison")
+# plot_model_comparison(directory="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/net_size_comparison")
 
 def plot_combined_trends(directory="."):
     results = []
@@ -219,7 +219,7 @@ def plot_combined_trends(directory="."):
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Success: Plot saved as {output_path}")
 
-# plot_combined_trends(directory="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/net_size_comparison")
+# plot_combined_trends(directory="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/net_size_comparison")
 
 import pandas as pd
 import glob
@@ -295,4 +295,4 @@ def plot_combined_si_sdri(directory="."):
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Success: Plot saved as {output_path}")
 
-plot_combined_si_sdri(directory="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/net_size_comparison")
+plot_combined_si_sdri(directory="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/net_size_comparison")

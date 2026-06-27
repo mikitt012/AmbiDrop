@@ -35,7 +35,7 @@ def inspect_checkpoint(checkpoint_path):
         print("Unknown checkpoint format.")
 
 # # Usage on your cluster path
-# ckpt_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2026-03-04_09-13-31.pt"
+# ckpt_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2026-03-04_09-13-31.pt"
 # if os.path.exists(ckpt_path):
 #     inspect_checkpoint(ckpt_path)
 # else:
@@ -71,7 +71,7 @@ def split_checkpoint_by_size(input_path):
         print("Checkpoint is not a list. No splitting needed.")
 
 # Run it
-input_ckpt = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2026-03-09_14-23-53.pt"
+input_ckpt = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2026-03-09_14-23-53.pt"
 # split_checkpoint_by_size(input_ckpt)
 
 def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None, scheduler=None):
@@ -79,7 +79,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -122,7 +122,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
 
         return chosen_epoch
 
-# checkpoint_list = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/checkpoint_size_3490.pt")
+# checkpoint_list = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/checkpoint_size_3490.pt", map_location="cpu")
 # available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 # print(available_epochs)
 
@@ -150,10 +150,10 @@ def horizontal_histogram(csv_path):
     ax.grid(axis='x', linestyle='--', alpha=0.7)
 
     plt.tight_layout()
-    plt.savefig("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/snr_distribution_fixed/si_sdr_test_histogram_array_avg.png", dpi=300)
+    plt.savefig("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/snr_distribution_fixed/si_sdr_test_histogram_array_avg.png", dpi=300)
     plt.show()
 
-csv_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/snr_distribution_fixed/si-sdr distribution across examples and averaged over arrays.csv"
+csv_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/snr_distribution_fixed/si-sdr distribution across examples and averaged over arrays.csv"
 # horizontal_histogram(csv_path)
 
 import pandas as pd
@@ -214,16 +214,16 @@ def horizontal_histogram_5db(csv_path):
     ax.grid(axis='x', linestyle='--', alpha=0.7)
 
     plt.tight_layout()
-    plt.savefig("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/snr_distribution_fixed2/si_sdr_2db_aggregated_histogram_bigger.png", dpi=300)
+    plt.savefig("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/snr_distribution_fixed2/si_sdr_2db_aggregated_histogram_bigger.png", dpi=300)
     plt.show()
 
 # Run with your path
-csv_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/snr_distribution_fixed2/si-sdr distribution across examples and arrays.csv"
+csv_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/snr_distribution_fixed2/si-sdr distribution across examples and arrays.csv"
 horizontal_histogram_5db(csv_path)
 
 import sofar as sf
 
-# sofa = sf.read_sofa("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/aria_atfs_fixed.sofa")
+# sofa = sf.read_sofa("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/aria_atfs_fixed.sofa")
 
 # # This prints a summary of all fields to the console
 # sofa.inspect()
@@ -425,7 +425,7 @@ import pandas as pd
 # plt.show()
 # plt.savefig('my_metric_comparison.png') # Uncomment to save
 
-#runai-bgu submit python -n ahh -c 20 -m 40G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/a.py"
+#runai-bgu submit python -n ahh -c 20 -m 40G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/a.py"
 
 # file_path = "/gpfs0/bgu-br/projects/sim_dataset_ambisonics/si_tr_s/ex_1.mat"
 # import scipy.io
@@ -448,7 +448,7 @@ import torch
 from pprint import pprint
 
 # 1. Load the dictionary
-# data = torch.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/mic_val_ds_preprocessed_merged/ex_400.pt', map_location='cpu')
+# data = torch.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/mic_val_ds_preprocessed_merged/ex_400.pt', map_location='cpu')
 
 # print(f"--- Dictionary Contents of {type(data)} ---")
 
@@ -515,8 +515,8 @@ from pprint import pprint
 #     return is_identical
 
 # # --- Example Usage ---
-# folder1_p = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds/front hemisphere1 (rigid) radius = 0.1/ex_1/p.wav"
-# folder2_p = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds/planar/ex_1/p.wav"
+# folder1_p = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds/front hemisphere1 (rigid) radius = 0.1/ex_1/p.wav"
+# folder2_p = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds/planar/ex_1/p.wav"
 # check_wavs_identical(folder1_p, folder2_p)
 
 # import scipy.io
@@ -576,12 +576,12 @@ from pprint import pprint
 #     return all_identical
 
 # # --- הרצה על הקבצים שלך ---
-# mat_path1 = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds/front hemisphere1 (rigid) radius = 0.1/ex_1/anm.mat"
-# mat_path2 = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds/planar/ex_1/anm.mat"
+# mat_path1 = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds/front hemisphere1 (rigid) radius = 0.1/ex_1/anm.mat"
+# mat_path2 = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds/planar/ex_1/anm.mat"
 
 # check_mats_identical(mat_path1, mat_path2)
 
-# data = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/FaSNet_with_AmbiDrop/master_si_sdr_enhanced.npy')
+# data = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/FaSNet_with_AmbiDrop/master_si_sdr_enhanced.npy')
 
 # # 2. הדפסת העמודה הראשונה
 # # הסימן ':' אומר "קח את כל השורות", והמספר '0' אומר "קח את העמודה הראשונה"
@@ -657,15 +657,15 @@ def compare_two_pt_tuples(path1, path2):
 # # --- שימוש ---
 
 # # --- הרצה ---
-# # path1 = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed/front hemisphere1 (rigid) radius = 0.1_preprocessed/ex_1.pt"
-# # path2 = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap_swap/front hemisphere1 (rigid) radius = 0.1_preprocessed/ex_1.pt"
+# # path1 = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed/front hemisphere1 (rigid) radius = 0.1_preprocessed/ex_1.pt"
+# # path2 = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap_swap/front hemisphere1 (rigid) radius = 0.1_preprocessed/ex_1.pt"
 # # compare_two_pt_tuples(path1, path2)
 
 # import numpy as np
 # from scipy.io import loadmat, savemat
 
-# IR = np.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/ATF_mismatch_ds/Aria_shroom/IR.npy")
-# ATF = np.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/ATF_mismatch_ds/Aria_shroom/ATF.npy")
+# IR = np.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/ATF_mismatch_ds/Aria_shroom/IR.npy")
+# ATF = np.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/ATF_mismatch_ds/Aria_shroom/ATF.npy")
 
 # savemat('Aria_ATF_16khz.mat', {'ATF': ATF})
 # savemat('Aria_IR_16khz.mat', {'IR': IR})

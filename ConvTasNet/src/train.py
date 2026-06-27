@@ -86,7 +86,7 @@ parser.add_argument('--l2', default=0.0, type=float,
                     help='weight decay (L2 penalty)')
 # save and load model
 # save and load model
-base_save_path = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/checkpoints'
+base_save_path = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints'
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 save_folder = os.path.join(base_save_path, f"run_{timestamp}")
 
@@ -188,4 +188,4 @@ if __name__ == '__main__':
     print(args)
     main(args)
 
-#runai-bgu submit python -n convtasnet-train2 -c 20 -m 80G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/ConvTasNet/src/train.py"
+#runai-bgu submit python -n convtasnet-train2 -c 20 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/src/train.py"

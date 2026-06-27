@@ -219,7 +219,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -735,7 +735,7 @@ class PreprocessedSHDataset(Dataset):
 
     def __getitem__(self, idx):
         # each .pt contains a tuple (clean_ch0, noisy_speech_tf)
-        clean_real_ch0, noisy_speech_tf = torch.load(self.samples[idx])
+        clean_real_ch0, noisy_speech_tf = torch.load(self.samples[idx], map_location="cpu")
         max_val = noisy_speech_tf.abs().max().item()
         noisy_speech_tf = noisy_speech_tf / max_val
         clean_real_ch0 = clean_real_ch0/max_val
@@ -964,29 +964,29 @@ for h1, h2 in model_sizes:
     ).to(device)
     
     total_params = sum(p.numel() for p in net.parameters())
-    checkpoint_path = f"/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/checkpoint_size_{total_params}.pt"
+    checkpoint_path = f"/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/checkpoint_size_{total_params}.pt"
     print(f"Loading/Saving checkpoint: {checkpoint_path}")
 
     model_type = "_dropout_fullanm"  # regular / dropout
     # if model_type == "_regular":
-    #     checkpoint = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints_old/SH_FT_JNF_partial_paper.pt")
+    #     checkpoint = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints_old/SH_FT_JNF_partial_paper.pt", map_location="cpu")
     # if model_type == "_dropout":
-    #     checkpoint = torch.load("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-08-09_11-00-08.pt")
+    #     checkpoint = torch.load("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-08-09_11-00-08.pt")
     # if model_type == "_dropout_fullanm":
     #     if smallnet:
-    #         checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+    #         checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
     #     else:   
-    #         checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_09-21-33.pt"
+    #         checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_09-21-33.pt"
     #     chosen_epoch = load_checkpoint(checkpoint_path, target_epoch=300, net=net)
     #     print(chosen_epoch)
 
     # net.load_state_dict(checkpoint['model_state_dict'])
     # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-    # data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap' 
+    # data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap' 
     # test_type = 'front hemisphere1 (rigid) radius = 0.1_preprocessed'
     # # test_ds = SimDS(data_dir,'test_data_SH')
-    # # max_len_train = find_max_length('/gpfs0/bgu-br/users/tatarjit/speech-enhancement', 'train_data_SH', ambisonics=True)
+    # # max_len_train = find_max_length('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop', 'train_data_SH', ambisonics=True)
     # # test_ds = SimDS_preprocessed(data_dir, 'si_et_05_preprocessed_full')
     # test_ds = SimDS_preprocessed(data_dir, test_type)
     # # test_ds = PreprocessedSHDataset(data_dir, "test_data_SH_STFT")
@@ -1016,9 +1016,9 @@ for h1, h2 in model_sizes:
         # if t == 4 and i == 1:
         #     continue   # skip i=1 when t=4
         if i == 1:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap_swap'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds_preprocessed_swap_swap'
         else:
-            data_dir = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap_swap'
+            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap_swap'
 
         dataset_label = "Train_Arrays" if i == 1 else "Test_Arrays"
         all_test_types = sorted(os.listdir(data_dir))
@@ -1148,7 +1148,7 @@ for h1, h2 in model_sizes:
         # break
 
     df = pd.DataFrame(model_results)
-    output_path = f"/gpfs0/bgu-br/users/tatarjit/speech-enhancement/results/metrics_params_{total_params}.csv"
+    output_path = f"/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/results/metrics_params_{total_params}.csv"
     
     # Ensure directory exists
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -1161,14 +1161,14 @@ for h1, h2 in model_sizes:
 
 # scipy.io.savemat("result1.mat", {"noisy": y, "enhanced": s_hat, "clean": s1})
 # 
-# save_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/recordings/"  # or any desired folder path
-# save_dir = os.path.join("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/recordings/", test_type)
+# save_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/recordings/"  # or any desired folder path
+# save_dir = os.path.join("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/recordings/", test_type)
 # os.makedirs(save_dir, exist_ok=True)  # make sure the folder exists
 
 # scipy.io.wavfile.write(os.path.join(save_dir, "clean.wav"), 16000, s1.cpu().numpy().astype('float32'))
 # scipy.io.wavfile.write(os.path.join(save_dir, "enhanced.wav"), 16000, s_hat.cpu().numpy().astype('float32'))
 # scipy.io.wavfile.write(os.path.join(save_dir, "noisy.wav"), 16000, y.cpu().numpy().astype('float32'))
 
-#runai-cmd --name test-dropout  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/test_SH_FT_JNF.py"
+#runai-cmd --name test-dropout  -g 0.3 --cpu-limit 10 -- "conda activate venv && python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/test_SH_FT_JNF.py"
 
-#runai-bgu submit python -n net-test -c 20 -m 40G -g 1 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/SH_net_sizes_testing.py"
+#runai-bgu submit python -n net-test -c 20 -m 40G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/SH_net_sizes_testing.py"

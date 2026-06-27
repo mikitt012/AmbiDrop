@@ -421,7 +421,7 @@ def load_checkpoint(checkpoint_path, target_epoch=None, net=None, optimizer=None
     Load the checkpoint for a specific epoch or the latest checkpoint if no epoch is specified.
     Also loads learning rate and scheduler state.
     """
-    checkpoint_list = torch.load(checkpoint_path)
+    checkpoint_list = torch.load(checkpoint_path, map_location="cpu")
     available_epochs = [ckpt["epoch"] for ckpt in checkpoint_list]
 
     # If no epoch specified, pick the latest
@@ -711,7 +711,7 @@ def array_ambisonics_time(p, V, th, ph, nfft, fs, N):
     def _calculate_coefficients(V,N,th,ph,plot):
         V = V.T
         Y = compute_spherical_harmonics_matrix(N, th, ph)
-        Y_yo = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/Y.npy')
+        Y_yo = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/Y.npy')
         Y_yo = Y_yo.T
         # Y = Y_yo
         cnm = np.zeros(((N+1)**2, V.shape[1], V.shape[2]), dtype=np.complex128)
@@ -738,7 +738,7 @@ def array_ambisonics_time(p, V, th, ph, nfft, fs, N):
         # assert is_signal_frequency_sh_valid(cnm, freq_axis=1, sh_axis=0)
 
 
-        # cnm = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/cnm.npy')
+        # cnm = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/cnm.npy')
         # cnm = cnm.transpose(1, 2, 0)
         # nfft = 332
         # cnm = cnm[:, :nfft//2 + 1, :]
@@ -864,7 +864,7 @@ def array_ambisonics_time(p, V, th, ph, nfft, fs, N):
     cnm = _calculate_coefficients(V,N,th,ph,plot)
     nfft = 512
 
-    # cnm = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/cnm.npy')
+    # cnm = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/cnm.npy')
     # cnm = cnm.transpose(1, 2, 0) # nm x F x ch
     # nfft = 332
     # cnm = cnm[:, :nfft//2 + 1, :]
@@ -914,7 +914,7 @@ def plot_nmse(mse, freqs, save_path="nmse_plot.png"):
     plt.savefig(save_path, dpi=250)
     print(f"Saved plot to: {save_path}")
 
-def sweep_alignment_sisdr(s1, s_hat, fs, t0, ranges, save_path="/gpfs0/bgu-br/users/tatarjit/speech-enhancement/sisdr_vs_shift.png"):
+def sweep_alignment_sisdr(s1, s_hat, fs, t0, ranges, save_path="/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/sisdr_vs_shift.png"):
     """
     s1  : reference clean signal (1D)
     s_hat : enhanced signal (1D)
@@ -1249,7 +1249,7 @@ if __name__ == "__main__":
 
     # ----- CONFIG -----
     AmbiDrop = False
-    data_root = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds"
+    data_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds"
     datas = ["mixed_data_1_5int", "mixed_data_1_5int_mispositioned"]
     for data_type in datas:
         train = False
@@ -1260,7 +1260,7 @@ if __name__ == "__main__":
 
         wandb_active = True
 
-        base_dir = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/experiment_full_anm/utils"
+        base_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/utils"
         # --- 1. Load steering matrix: CH x F x Q ---
         if simulated_steering:
             steering_name = "simV"
@@ -1279,7 +1279,7 @@ if __name__ == "__main__":
 
         else:
             steering_name = "measuredV"
-            file_path = '/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/aria_atfs.pkl'
+            file_path = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/aria_atfs.pkl'
 
             with open(file_path, 'rb') as file:
                 data = pickle.load(file)
@@ -1294,7 +1294,7 @@ if __name__ == "__main__":
             th = directions[1, :]
             ir = far_field.transpose(1, 0, 2) # shape (CH, T, Q)
 
-            sofa = sofar.read_sofa("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/aria_atfs_fixed.sofa")
+            sofa = sofar.read_sofa("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/aria_atfs_fixed.sofa")
             ir = sofa.Data_IR
             fs = sofa.Data_SamplingRate
             ir = ir.transpose(1, 2, 0) # shape (CH, T, Q)
@@ -1321,7 +1321,7 @@ if __name__ == "__main__":
 
             V = V.detach().cpu().numpy()
 
-            V_yo = np.load('/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/ATF.npy')
+            V_yo = np.load('/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/ATF.npy')
             V_yo = V_yo.transpose(0, 2, 1) # shape (CH, F, Q)
             V_yo = V_yo[:, :n_fft//2 + 1, :]
 
@@ -1336,119 +1336,119 @@ if __name__ == "__main__":
                 max_drop = 3
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
             if t == 1:
                 drop_prob = 0.7
                 max_drop = 7
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-20-29.pt"
             if t == 2:
                 drop_prob = 0.6
                 max_drop = 7
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-18-51.pt"
             if t == 3:
                 drop_prob = 0.5
                 max_drop = 6
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-31-01.pt"
             if t == 4:
                 drop_probs = [0, 0.55, 0.9, 0.6, 1, 1, 1, 1, 1] # th = -10 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_15-45-32.pt"
             if t == 5:
                 drop_probs = [0, 0.35, 0.75, 0.2, 1, 1, 1, 1, 1] # th = -8.2 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-04_21-44-11.pt"
             if t == 6:
                 drop_probs = [0, 0.15, 0.6, 0.2, 0.95, 1, 0.95, 1, 0.95] # th = -7 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_03-53-11.pt"
             if t == 7:
                 drop_probs = [0, 0.15, 0.55, 0.15, 0.8, 1, 0.95, 1, 0.85] # th = -5.7 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_09-45-29.pt"
             if t == 8:
                 drop_probs = [0, 0.1, 0.45, 0.15, 0.7, 1, 0.85, 1, 0.65] # th = -5 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_15-44-31.pt"
             if t == 9:
                 drop_probs = [0, 0.1, 0.45, 0.1, 0.55, 1, 0.85, 1, 0.55] # th = -4.2 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-05_21-56-06.pt"
             if t == 10:
                 drop_probs = [0, 0.1, 0.45, 0.1, 0.45, 1, 0.75, 1, 0.45] # th = -3.4 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_04-07-37.pt"
             if t == 11:
                 drop_probs = [0, 0.05, 0.45, 0.05, 0.4, 0.95, 0.5, 0.95, 0.4] # th = -2.4 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_09-56-40.pt"
             if t == 12:
                 drop_probs = [0, 0.05, 0.45, 0.05, 0.1, 0.75, 0.4, 0.75, 0.1] # th = -1.4 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_15-58-32.pt"
             if t == 13:
                 drop_probs = [0, 0.05, 0.35, 0.05, 0, 0.4, 0, 0.3, 0] # th = 0 dB
                 drop_prob = 0
                 max_drop = 0
                 dropout = "PerChDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-06_22-04-29.pt"
             if t == 14:
                 drop_prob = 0.4
                 max_drop = 7
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-21_17-36-40.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-21_17-36-40.pt"
             if t == 15:
                 drop_prob = 0.3
                 max_drop = 6
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-22_14-53-29.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-22_14-53-29.pt"
             if t == 16:
                 drop_prob = 0.7
                 max_drop = 3
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-23_05-06-54.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-23_05-06-54.pt"
             if t == 17:
                 drop_prob = 0
                 max_drop = 0
                 drop_probs = []
                 dropout = "SHChannelDropout"
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-23_13-38-21.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-23_13-38-21.pt"
 
 
             if AmbiDrop:
                 model_type = "AmbiDrop"
                 ch_num = 18
-                # checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
+                # checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt"
             else:
                 model_type = "baseline"
                 ch_num = 14
-                checkpoint_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
+                checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/checkpoints/FT_JNF,2026-03-25_13-37-42.pt"
             
             smallnet = True
 
@@ -1625,7 +1625,7 @@ if __name__ == "__main__":
             plot_snr_dist = False
 
             if plot_snr_dist:
-                base_path_temp = os.path.join("/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds", data_type)
+                base_path_temp = os.path.join("/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds", data_type)
                 base_path = base_path_temp + "_plots"
                 os.makedirs(base_path, exist_ok=True)
 
@@ -1739,13 +1739,13 @@ if __name__ == "__main__":
                 print(summary.to_string(index=False))
 
                 # Example Usage:
-                base_path = "/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds"
+                base_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds"
                 csv_file = os.path.join(base_path, 'si-sdr distribution across examples of aria.csv')
                 png_file = os.path.join(base_path, 'si-sdr distribution across examples of aria.png')
 
                 if os.path.exists(csv_file):
                     csv_to_filtered_table_image(csv_file, png_file, title_text = 'si-sdr distribution (ASM to network) across examples and arrays')
 
-#rsync -avh --progress "/Users/mikitatarjitzky/Documents/aria/projectaria_client_sdk_samples/mixed_data/" tatarjit@bhn20:/gpfs0/bgu-br/users/tatarjit/speech-enhancement/datasets/aria_ds/mixed_data
+#rsync -avh --progress "/Users/mikitatarjitzky/Documents/aria/projectaria_client_sdk_samples/mixed_data/" tatarjit@bhn20:/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/aria_ds/mixed_data
 
-#runai-bgu submit python -n aria-test -c 20 -m 40G -g 0.5 --conda venv -- "python /gpfs0/bgu-br/users/tatarjit/speech-enhancement/test_aria_glasses_baseline.py"
+#runai-bgu submit python -n aria-test -c 20 -m 40G -g 0.5 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/test_aria_glasses_baseline.py"
