@@ -1,191 +1,156 @@
 #!/usr/bin/env python
+"""
+Unified IC Conv-TasNet training script.
 
-# Created on 2018/12
-# Author: Kaituo XU
+Examples:
+    # AmbiDrop mode (9 SH channels, with dropout)
+    python ConvTasNet/src/train.py --mode ambidrop --mic_num 9 \
+        --train_dir si_tr_s_preprocessed_full --valid_dir si_dt_05_preprocessed_full
+
+    # Baseline mode (7 mic channels, no dropout)
+    python ConvTasNet/src/train.py --mode baseline --mic_num 7 \
+        --train_dir datasets/experiment_full_anm/mic_train_ds_preprocessed_merged \
+        --valid_dir datasets/experiment_full_anm/mic_val_ds_preprocessed_merged
+"""
 
 import argparse
-
-import torch
-
-from data import AudioDataset, AudioDataLoader, MergedDataset, MatDataset
-from solver import Solver
-from conv_tasnet import ConvTasNet
-import conv_tasnet_ic
-
-from torch.utils.data import Dataset, DataLoader
 import os
 from datetime import datetime
+
+import torch
+from torch.utils.data import DataLoader
+
+from data import MergedDataset, MatDataset, SimDS_preprocessed
+from solver import Solver
+import conv_tasnet_ic
 import wandb
+
 wandb.login()
 
+parser = argparse.ArgumentParser("IC Conv-TasNet Training")
 
-parser = argparse.ArgumentParser(
-    "Fully-Convolutional Time-domain Audio Separation Network (Conv-TasNet) "
-    "with Permutation Invariant Training")
-# General config
-# Task related
-parser.add_argument('--train_dir', type=str, default=None,
-                    help='directory including mix.json, s1.json and s2.json')
-parser.add_argument('--valid_dir', type=str, default=None,
-                    help='directory including mix.json, s1.json and s2.json')
-parser.add_argument('--sample_rate', default=16000, type=int,
-                    help='Sample rate')
-parser.add_argument('--segment', default=4, type=float,
-                    help='Segment length (seconds)')
-parser.add_argument('--cv_maxlen', default=6, type=float,
-                    help='max audio length (seconds) in cv, to avoid OOM issue.')
-# Network architecture
-    # model_mic_num: int = 4
-    # model_ch_dim: int = 8
-    # model_enc_dim: int = 512
-    # model_feature_dim: int = 128
-    # model_win: int = 16
-    # model_layer: int = 8
-    # model_stack: int = 1
-    # model_kernel: int = 3
-    # model_num_spk: int = 1
-    # model_causal: bool = False
+parser.add_argument('--mode', choices=['baseline', 'ambidrop'], default='ambidrop')
+
+parser.add_argument('--train_dir', type=str, default=None)
+parser.add_argument('--valid_dir', type=str, default=None)
+parser.add_argument('--sample_rate', default=16000, type=int)
+parser.add_argument('--segment', default=4, type=float)
+parser.add_argument('--cv_maxlen', default=6, type=float)
+
 parser.add_argument('--mic_num', default=9, type=int)
-parser.add_argument('--ch_dim', default=8, type=int) # C
-parser.add_argument('--enc_dim', default=512, type=int) # F
-parser.add_argument('--feature_dim', default=128, type=int) # N
-parser.add_argument('--win', default=16, type=int) # 16 ms with 50% overlap
-parser.add_argument('--layer', default=8, type=int) # D
-parser.add_argument('--stack', default=1, type=int) # S
-parser.add_argument('--kernel', default=3, type=int) # 3x3
+parser.add_argument('--ch_dim', default=8, type=int)
+parser.add_argument('--enc_dim', default=512, type=int)
+parser.add_argument('--feature_dim', default=128, type=int)
+parser.add_argument('--win', default=16, type=int)
+parser.add_argument('--layer', default=8, type=int)
+parser.add_argument('--stack', default=1, type=int)
+parser.add_argument('--kernel', default=3, type=int)
 parser.add_argument('--num_spk', default=1, type=int)
 parser.add_argument('--causal', type=bool, default=False)
 
-# Training config
-parser.add_argument('--use_cuda', type=int, default=1,
-                    help='Whether use GPU')
-parser.add_argument('--epochs', default=100, type=int,
-                    help='Number of maximum epochs')
-parser.add_argument('--half_lr', dest='half_lr', default=1, type=int,
-                    help='Halving learning rate when get small improvement')
-parser.add_argument('--early_stop', dest='early_stop', default=1, type=int,
-                    help='Early stop training when no improvement for 10 epochs')
-parser.add_argument('--max_norm', default=5, type=float,
-                    help='Gradient norm threshold to clip')
-# minibatch
-parser.add_argument('--shuffle', default=0, type=int,
-                    help='reshuffle the data at every epoch')
-parser.add_argument('--batch_size', default=64, type=int,
-                    help='Batch size')
-parser.add_argument('--num_workers', default=0, type=int,
-                    help='Number of workers to generate minibatch')
-# optimizer
-parser.add_argument('--optimizer', default='adam', type=str,
-                    choices=['sgd', 'adam'],
-                    help='Optimizer (support sgd and adam now)')
-parser.add_argument('--lr', default=1e-3, type=float,
-                    help='Init learning rate')
-parser.add_argument('--momentum', default=0.0, type=float,
-                    help='Momentum for optimizer')
-parser.add_argument('--l2', default=0.0, type=float,
-                    help='weight decay (L2 penalty)')
-# save and load model
-# save and load model
-base_save_path = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints'
+parser.add_argument('--dropout_type', default='SHChannelDropout',
+                    choices=['SHChannelDropout', 'PerChDropout'])
+parser.add_argument('--drop_prob', default=0.4, type=float)
+parser.add_argument('--max_drop', default=3, type=int)
+parser.add_argument('--drop_probs', type=str, default=None,
+                    help='Comma-separated per-channel probabilities')
+
+parser.add_argument('--use_cuda', type=int, default=1)
+parser.add_argument('--epochs', default=100, type=int)
+parser.add_argument('--half_lr', default=1, type=int)
+parser.add_argument('--early_stop', default=1, type=int)
+parser.add_argument('--max_norm', default=5, type=float)
+parser.add_argument('--shuffle', default=0, type=int)
+parser.add_argument('--batch_size', default=64, type=int)
+parser.add_argument('--num_workers', default=0, type=int)
+parser.add_argument('--optimizer', default='adam', type=str, choices=['sgd', 'adam'])
+parser.add_argument('--lr', default=1e-3, type=float)
+parser.add_argument('--momentum', default=0.0, type=float)
+parser.add_argument('--l2', default=0.0, type=float)
+
+base_save_path = os.path.join(os.path.dirname(__file__), '..', 'checkpoints')
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 save_folder = os.path.join(base_save_path, f"run_{timestamp}")
 
-parser.add_argument('--save_folder', default=save_folder, help='Location to save epoch models')
-parser.add_argument('--checkpoint', dest='checkpoint', default=0, type=int,
-                    help='Enables checkpoint saving of model')
-parser.add_argument('--continue_from', default='',
-                    help='Continue from checkpoint model')
-parser.add_argument('--model_path', default='final.pth.tar',
-                    help='Location to save best validation model')
-# logging
-parser.add_argument('--print_freq', default=10, type=int,
-                    help='Frequency of printing training infomation')
-parser.add_argument('--visdom', dest='visdom', type=int, default=0,
-                    help='Turn on visdom graphing')
-parser.add_argument('--visdom_epoch', dest='visdom_epoch', type=int, default=0,
-                    help='Turn on visdom graphing each epoch')
-parser.add_argument('--visdom_id', default='TasNet training',
-                    help='Identifier for visdom run')
+parser.add_argument('--save_folder', default=save_folder)
+parser.add_argument('--checkpoint', default=0, type=int)
+parser.add_argument('--continue_from', default='')
+parser.add_argument('--model_path', default='final.pth.tar')
+parser.add_argument('--print_freq', default=10, type=int)
+parser.add_argument('--visdom', type=int, default=0)
+parser.add_argument('--visdom_epoch', type=int, default=0)
+parser.add_argument('--visdom_id', default='TasNet training')
+parser.add_argument('--no_wandb', action='store_true')
 
 
 def main(args):
-    drop_prob = 0.4
-    max_drop = 3
-    drop_probs = []
-    th = 0
-    dropout = "SHChannelDropout"
+    drop_probs = None
+    if args.drop_probs:
+        drop_probs = [float(x) for x in args.drop_probs.split(',')]
 
-    # drop_prob = 0
-    # max_drop = 0
-    # drop_probs = [0, 0.1, 0.45, 0.1, 0.45, 1, 0.75, 1, 0.45]
-    # th = -3.4
-    # dropout = "PerChDropout"
+    if not args.no_wandb:
+        project = f"ConvTasNet_{args.mode}"
+        wandb.init(project=project, entity="tatarjit-ben-gurion-university-of-the-negev",
+                   name=f"run_{timestamp}", config=vars(args))
+        if args.mode == 'ambidrop':
+            wandb.config.update({
+                "drop_prob": args.drop_prob,
+                "max_drop": args.max_drop,
+                "dropout_type": args.dropout_type,
+            })
 
-    wandb.init(
-            project=f"ConvTasNet_with_AmbiDrop",
-            entity="tatarjit-ben-gurion-university-of-the-negev", 
-            name=f"run_{timestamp}",
-            config=vars(args) # Logs all parser arguments automatically
-        )
+    has_mat = any(f.endswith('.mat') for f in os.listdir(args.train_dir))
+    has_pt = any(f.endswith('.pt') for f in os.listdir(args.train_dir))
 
-    wandb.config.update({
-            "drop_prob": drop_prob,
-            "max_drop": max_drop,
-            "dropout_type": dropout,
-            "threshold_th": th
-        })
+    if has_mat:
+        tr_dataset = MatDataset(args.train_dir)
+        cv_dataset = MatDataset(args.valid_dir)
+    elif has_pt:
+        tr_dataset = SimDS_preprocessed(args.train_dir, '.', mode=args.mode)
+        cv_dataset = SimDS_preprocessed(args.valid_dir, '.', mode=args.mode)
+    else:
+        tr_dataset = MergedDataset(args.train_dir)
+        cv_dataset = MergedDataset(args.valid_dir)
 
-    # data
-    tr_dataset = MatDataset('/gpfs0/bgu-br/projects/sim_dataset_ambisonics/si_tr_s')
-    cv_dataset = MatDataset('/gpfs0/bgu-br/projects/sim_dataset_ambisonics/si_dt_05')
-
-    # tr_dataset.file_list = tr_dataset.file_list[:10] # Directly slice the list
-    # cv_dataset.file_list = cv_dataset.file_list[:10] # Directly slice the list
-
-    tr_loader = DataLoader(tr_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    cv_loader = DataLoader(cv_dataset, batch_size=1, shuffle=False, num_workers=args.num_workers)
+    tr_loader = DataLoader(tr_dataset, batch_size=args.batch_size,
+                           shuffle=True, num_workers=args.num_workers)
+    cv_loader = DataLoader(cv_dataset, batch_size=1,
+                           shuffle=False, num_workers=args.num_workers)
 
     data = {'tr_loader': tr_loader, 'cv_loader': cv_loader}
-    print('data is loaded')
+    print(f'Data loaded: {len(tr_dataset)} train, {len(cv_dataset)} val')
 
-    # model
-    # model = ConvTasNet(args.N, args.L, args.B, args.H, args.P, args.X, args.R,
-    #                    args.C, drop_prob=drop_prob, max_drop=max_drop, drop_probs=drop_probs, dropout=dropout, norm_type=args.norm_type, causal=args.causal,
-    #                    mask_nonlinear=args.mask_nonlinear)
-
-    model = conv_tasnet_ic.TasNet(args.mic_num, args.num_spk, args.enc_dim, args.feature_dim, args.ch_dim,
-                         args.sample_rate, args.win, args.layer, args.stack, args.kernel, args.causal,
-                         drop_prob=drop_prob, max_drop=max_drop, drop_probs=drop_probs, dropout=dropout)
+    model = conv_tasnet_ic.TasNet(
+        args.mic_num, args.num_spk, args.enc_dim, args.feature_dim, args.ch_dim,
+        args.sample_rate, args.win, args.layer, args.stack, args.kernel, args.causal,
+        mode=args.mode,
+        drop_prob=args.drop_prob,
+        max_drop=args.max_drop,
+        drop_probs=drop_probs,
+        dropout_type=args.dropout_type,
+    )
 
     k = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print('# of parameters:', k)
+    print(f'# of parameters: {k:,}')
 
-    if args.use_cuda:
+    if args.use_cuda and torch.cuda.is_available():
         model = torch.nn.DataParallel(model)
         model.cuda()
-    # optimizer
-    if args.optimizer == 'sgd':
-        optimizier = torch.optim.SGD(model.parameters(),
-                                     lr=args.lr,
-                                     momentum=args.momentum,
-                                     weight_decay=args.l2)
-    elif args.optimizer == 'adam':
-        optimizier = torch.optim.Adam(model.parameters(),
-                                      lr=args.lr,
-                                      weight_decay=args.l2)
-    else:
-        print("Not support optimizer")
-        return
 
-    # solver
-    solver = Solver(data, model, optimizier, args)
+    if args.optimizer == 'sgd':
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
+                                     momentum=args.momentum, weight_decay=args.l2)
+    elif args.optimizer == 'adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+
+    solver = Solver(data, model, optimizer, args)
     solver.train()
-    wandb.finish()
+
+    if not args.no_wandb:
+        wandb.finish()
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
     main(args)
-
-#runai-bgu submit python -n convtasnet-train2 -c 20 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/src/train.py"

@@ -21,6 +21,7 @@ class Solver(object):
 
         # Training config
         self.use_cuda = args.use_cuda
+        self.mode = getattr(args, 'mode', 'ambidrop')
         self.epochs = args.epochs
         self.half_lr = args.half_lr
         self.early_stop = args.early_stop
@@ -54,7 +55,7 @@ class Solver(object):
         if self.continue_from:
             print('Loading checkpoint model %s' % self.continue_from)
             package = torch.load(self.continue_from, map_location="cpu")
-            self.model.module.load_state_dict(package['state_dict'])
+            (self.model.module if hasattr(self.model, 'module') else self.model).load_state_dict(package['state_dict'])
             self.optimizer.load_state_dict(package['optim_dict'])
             self.start_epoch = int(package.get('epoch', 1))
             self.tr_loss[:self.start_epoch] = package['tr_loss'][:self.start_epoch]
@@ -86,7 +87,7 @@ class Solver(object):
             if self.checkpoint:
                 file_path = os.path.join(
                     self.save_folder, 'epoch%d.pth.tar' % (epoch + 1))
-                torch.save(self.model.module.serialize(self.model.module,
+                torch.save((self.model.module if hasattr(self.model, 'module') else self.model).serialize((self.model.module if hasattr(self.model, 'module') else self.model),
                                                        self.optimizer, epoch + 1,
                                                        tr_loss=self.tr_loss,
                                                        cv_loss=self.cv_loss),
@@ -130,7 +131,7 @@ class Solver(object):
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
                 file_path = os.path.join(self.save_folder, self.model_path)
-                torch.save(self.model.module.serialize(self.model.module,
+                torch.save((self.model.module if hasattr(self.model, 'module') else self.model).serialize((self.model.module if hasattr(self.model, 'module') else self.model),
                                                        self.optimizer, epoch + 1,
                                                        tr_loss=self.tr_loss,
                                                        cv_loss=self.cv_loss),
@@ -158,13 +159,14 @@ class Solver(object):
                     )
 
             current_lr = self.optimizer.param_groups[0]['lr']
-            wandb.log({
-                "epoch": epoch + 1,
-                "train_loss": tr_avg_loss,
-                "val_loss": val_loss,
-                "learning_rate": current_lr,
-                "best_val_loss": min(self.best_val_loss, val_loss)
-            })
+            if wandb.run is not None:
+                wandb.log({
+                    "epoch": epoch + 1,
+                    "train_loss": tr_avg_loss,
+                    "val_loss": val_loss,
+                    "learning_rate": current_lr,
+                    "best_val_loss": min(self.best_val_loss, val_loss)
+                })
 
     def _run_one_epoch(self, epoch, cross_valid=False):
         start = time.time()
@@ -181,33 +183,43 @@ class Solver(object):
             vis_iters_loss = torch.Tensor(len(data_loader))
 
         for i, (data) in enumerate(data_loader):
-            noisy_batch, clean_batch = data
+            if isinstance(data, (tuple, list)) and len(data) >= 5:
+                noisy_batch, clean_batch, ref_ids, _, _ = data
+                batch_idx = torch.arange(clean_batch.shape[0]).to(clean_batch.device)
+                clean_ref_mic = clean_batch[batch_idx, ref_ids, :]
+                ref_ids = ref_ids
+            elif isinstance(data, (tuple, list)) and len(data) == 2:
+                noisy_batch, clean_batch = data
+                ref_ids = None
+                if clean_batch.dim() == 3 and clean_batch.shape[1] > 1:
+                    clean_ref_mic = clean_batch[:, 0, :]
+                else:
+                    clean_ref_mic = clean_batch.squeeze(1) if clean_batch.dim() == 3 else clean_batch
+            else:
+                noisy_batch, clean_batch = data[0], data[1]
+                ref_ids = None
+                clean_ref_mic = clean_batch.squeeze(1) if clean_batch.dim() == 3 else clean_batch
 
-            batch_idx = torch.arange(clean_batch.shape[0]).to(clean_batch.device)
-
-            # This picks: (Batch 0, Ch ref_0, all Time), (Batch 1, Ch ref_1, all Time)...
-            clean_ref_mic = clean_batch
-
-            # --- SILENCE CHECK ---
-            # Calculate the RMS (Root Mean Square) energy of the clean target
-            # If the audio is quieter than -60dB (approx 0.001 amplitude), skip it
-            clean_energy = torch.sqrt(torch.mean(clean_ref_mic**2, dim=-1)) # [B]
+            clean_energy = torch.sqrt(torch.mean(clean_ref_mic**2, dim=-1))
             if (clean_energy < 1e-4).any():
                 if i % self.print_freq == 0:
                     print(f"Skipping Batch {i}: Silent or extremely quiet clean reference detected.")
                 continue
-            
-            batch_size = noisy_batch.shape[0]  # B
-            num_samples = noisy_batch.shape[2] # T
-            mixture_lengths = torch.full((batch_size,), num_samples, dtype=torch.int64).to(noisy_batch.device)
-            
-            if self.use_cuda:
-                padded_mixture = noisy_batch.cuda() # B x C x T
-                mixture_lengths = mixture_lengths.cuda() # B
-                padded_source = clean_ref_mic.cuda() # B x T
-                padded_source = padded_source.unsqueeze(1)
 
-            estimate_source = self.model(padded_mixture) # B x 1 x T
+            batch_size = noisy_batch.shape[0]
+            num_samples = noisy_batch.shape[2]
+            mixture_lengths = torch.full((batch_size,), num_samples, dtype=torch.int64).to(noisy_batch.device)
+
+            padded_mixture = noisy_batch
+            padded_source = clean_ref_mic if clean_ref_mic.dim() == 3 else clean_ref_mic.unsqueeze(1)
+            if self.use_cuda:
+                padded_mixture = padded_mixture.cuda()
+                mixture_lengths = mixture_lengths.cuda()
+                padded_source = padded_source.cuda()
+                if ref_ids is not None:
+                    ref_ids = ref_ids.cuda()
+
+            estimate_source = self.model(padded_mixture, ref_ids=ref_ids)
 
             loss, max_snr, estimate_source, reorder_estimate_source = \
                 cal_loss(padded_source, estimate_source, mixture_lengths)

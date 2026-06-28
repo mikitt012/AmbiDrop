@@ -1,332 +1,74 @@
 #!/usr/bin/env python
+"""
+Unified IC Conv-TasNet evaluation script.
 
-# Created on 2018/12
-# Author: Kaituo XU
+Available checkpoints:
+    run_2026-04-09_08-35  AmbiDrop, SHChannelDropout (p=0.4, max=3)
+    run_2026-04-07_15-27  AmbiDrop, PerChDropout (th=-3.4 dB, probs=[0,0.1,0.45,0.1,0.45,1,0.75,1,0.45])
+    run_2026-04-09_10-55  Baseline (no dropout, 7 mic channels)
+
+Examples:
+    # AmbiDrop with SHChannelDropout
+    python ConvTasNet/src/evaluate.py --mode ambidrop \
+        --model_path ConvTasNet/checkpoints/run_2026-04-09_08-35/final.pth.tar \
+        --data_dir datasets/experiment_full_anm/test_of_train_ds
+
+    # AmbiDrop with PerChDropout
+    python ConvTasNet/src/evaluate.py --mode ambidrop \
+        --model_path ConvTasNet/checkpoints/run_2026-04-07_15-27/final.pth.tar \
+        --data_dir datasets/experiment_full_anm/test_of_test_ds \
+        --dropout_type PerChDropout \
+        --drop_probs "0,0.1,0.45,0.1,0.45,1,0.75,1,0.45"
+
+    # Baseline
+    python ConvTasNet/src/evaluate.py --mode baseline \
+        --model_path ConvTasNet/checkpoints/run_2026-04-09_10-55/final.pth.tar \
+        --data_dir datasets/experiment_full_anm/test_of_test_ds_preprocessed
+"""
 
 import argparse
 import os
+import sys
 
-import librosa
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
-from data import SimDS_preprocessed, MatDatasetTest, MatDataset, SimDS, MatDatasetTest_ASM
-from pit_criterion import cal_loss
-from conv_tasnet import ConvTasNet
+from data import SimDS_preprocessed, MatDatasetTest, MatDatasetTest_ASM
 import conv_tasnet_ic
 from utils import remove_pad
 from pesq import pesq
 from pystoi import stoi
-from torch.utils.data import Dataset, DataLoader, Subset
-from scipy.io import loadmat, savemat
+from scipy.io import loadmat
 
 import wandb
 wandb.login()
 
-dropout = "SHChannelDropout"
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from ambidrop.constants import REF_IDX_MAP
 
-if dropout == "SHChannelDropout":
-    # checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-07_10-18" # for uniform dropout
-    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-09_08-35" # same, more epochs
-else:
-    checkpoint_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/checkpoints/run_2026-04-07_15-27" # for pr ch dropout
+parser = argparse.ArgumentParser('Evaluate IC Conv-TasNet')
+parser.add_argument('--mode', choices=['baseline', 'ambidrop'], default='ambidrop')
+parser.add_argument('--model_path', type=str, required=True)
+parser.add_argument('--data_dir', type=str, default=None,
+                    help='Directory containing array subdirectories')
+parser.add_argument('--use_cuda', type=int, default=1)
+parser.add_argument('--sample_rate', default=16000, type=int)
+parser.add_argument('--batch_size', default=1, type=int)
+parser.add_argument('--dropout_type', default='SHChannelDropout')
+parser.add_argument('--drop_prob', default=0.4, type=float)
+parser.add_argument('--max_drop', default=3, type=int)
+parser.add_argument('--drop_probs', type=str, default=None)
+parser.add_argument('--no_wandb', action='store_true')
 
-full_checkpoint_path = os.path.join(checkpoint_path, "final.pth.tar")
-
-parser = argparse.ArgumentParser('Evaluate separation performance using Conv-TasNet')
-parser.add_argument('--model_path', type=str, default=full_checkpoint_path,
-                    help='Path to model file created by training')
-# parser.add_argument('--data_dir', type=str, required=True,
-#                     help='directory including mix.json, s1.json and s2.json')
-parser.add_argument('--cal_sdr', type=int, default=0,
-                    help='Whether calculate SDR, add this option because calculation of SDR is very slow')
-parser.add_argument('--use_cuda', type=int, default=1,
-                    help='Whether use GPU')
-parser.add_argument('--sample_rate', default=16000, type=int,
-                    help='Sample rate')
-parser.add_argument('--batch_size', default=1, type=int,
-                    help='Batch size')
 
 def pick_reference_id(test_type):
-    if test_type == "front hemisphere1 (rigid) radius = 0.1":
-        ref_idx = 1
+    clean_name = test_type.removesuffix("_preprocessed")
+    key_with = test_type if test_type in REF_IDX_MAP else clean_name + "_preprocessed"
+    return REF_IDX_MAP.get(key_with, REF_IDX_MAP.get(clean_name + "_preprocessed", 1)) - 1
 
-    if test_type == "full circle (rigid) radius = 0.1":
-        ref_idx = 1
-
-    if test_type == "planar":
-        ref_idx = 6
-
-    if test_type == "random 2D array1 radius = 0.1":
-        ref_idx = 6
-
-    if test_type == "random sphere1 radius = 0.1":
-        ref_idx = 7
-
-    if test_type == "random sphere3 (rigid) radius = 0.1":
-        ref_idx = 4
-
-    if test_type == "random sphere5 (rigid) radius = 0.05":
-        ref_idx = 2
-
-    if test_type == "semi circle planar radius = 0.05":
-        ref_idx = 6
-
-    if test_type == "ULA along X-axis":
-        ref_idx = 7
-
-    if test_type == "uniform sphere (rigid) radius = 0.1":
-        ref_idx = 2
-
-    if test_type == "front hemisphere2 (rigid) radius = 0.1":
-        ref_idx = 1
-
-    if test_type == "planar (rot=45deg)":
-        ref_idx = 5
-
-    if test_type == "random 2D array2 radius = 0.1":
-        ref_idx = 2
-
-    if test_type == "random sphere2 radius = 0.1":
-        ref_idx = 2
-
-    if test_type == "random sphere4 (rigid) radius = 0.1":
-        ref_idx = 7
-
-    if test_type == "random sphere6 (rigid) radius = 0.05":
-        ref_idx = 4
-
-    if test_type == "semi circle (rigid) radius = 0.1":
-        ref_idx = 4
-
-    if test_type == "ULA along Z-axis":
-        ref_idx = 4
-
-    if test_type == "uniform sphere (rigid) radius = 0.05":
-        ref_idx = 2
-
-    if test_type == "semi circle planar radius = 0.1":
-        ref_idx = 6
-
-    if test_type == "Aria on rigid sphere (simulated)":
-        ref_idx = 3
-
-    if test_type == "ULA along Y-axis (tilt=30deg)":
-        ref_idx = 4
-        
-    if test_type == "ULA along x-axis (rot=30deg)":
-        ref_idx = 7
-
-    if test_type == "ULA along y-axis":
-        ref_idx = 4
-
-    if test_type == "ULA along X-axis (tilt=20)":
-        ref_idx = 7
-
-    ref_ids = ref_idx - 1
-    return ref_ids
-
-def evaluate(args):
-    total_SISNRi = 0
-    total_SDRi = 0
-    total_cnt = 0
-
-    # Load model
-    # model = ConvTasNet.load_model(args.model_path)
-    model = conv_tasnet_ic.TasNet.load_model(args.model_path, dropout)
-    print(model)
-    model.eval()
-    if args.use_cuda:
-        model.cuda()
-
-    wandb_active = True
-
-    for j in range(1,3):
-        if j == 1:
-            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_train_ds'
-        else:
-            data_dir = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds'
-
-        for test_idx, test_type in enumerate(sorted(os.listdir(data_dir))):
-        # for t in range(0,1):
-            # if test_type == "ULA along X-axis":
-            #     continue
-            # if test_type == "Aria on rigid sphere (simulated)":
-            #     continue    
-
-            # test_type = "semi circle planar radius = 0.1"
-            if test_type.startswith('.'):
-                continue
-            array_name = test_type.removesuffix("_preprocessed")
-            name = array_name
-            if wandb_active:
-                wandb.init(project="ConvTasNet_experiment", entity="tatarjit-ben-gurion-university-of-the-negev",name=name)
-
-            steering_dir = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/steering"
-            mat_filename = f"{array_name}.mat"
-            steer_path = os.path.join(steering_dir, mat_filename)
-            steer_mat = loadmat(steer_path)
-            V = steer_mat["V"]          # numpy array, shape (CH, F, Q)
-
-            # --- 2. Load grid (theta, phi): 1 x Q ---
-            grid_path = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/utils/Lebvedev2702.mat"
-            grid_mat = loadmat(grid_path)
-            th = grid_mat["th"].squeeze()    # shape (Q,)
-            ph = grid_mat["ph"].squeeze()    # shape (Q,)
-
-            data_path = os.path.join(data_dir, test_type)
-            test_ds = MatDatasetTest_ASM(data_path, V, th, ph)
-            # test_ds = MatDatasetTest(data_path)
-            # test_ds = MatDataset('/gpfs0/bgu-br/projects/sim_dataset_ambisonics/si_et_05')
-            # num_examples = 1
-            # indices = list(range(num_examples))
-            # test_ds_subset = Subset(test_ds, indices)
-            # test_ds = test_ds_subset
-            data_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
-            
-            stoi_noisy = np.array([])
-            pesq_noisy = np.array([])
-            stoi_enhanced = np.array([])
-            pesq_enhanced = np.array([])
-            sisdr_noisy = np.array([])
-            sisdr_enhanced = np.array([])
-
-            total_SISNRi = 0
-            total_SISNRb = 0
-            total_SISNRa = 0
-            total_cnt = 0
-
-            ref_ids = pick_reference_id(test_type)
-
-            with torch.no_grad():
-                for i, (data) in enumerate(data_loader):
-                    noisy_mic, clean_mic, noisy_batch, clean_batch = data
-
-                    # --- SILENCE CHECK ---
-                    # Calculate the RMS (Root Mean Square) energy of the clean target
-                    # If the audio is quieter than -60dB (approx 0.001 amplitude), skip it
-                    clean_energy = torch.sqrt(torch.mean(clean_batch**2, dim=-1)) # [B]
-                    if (clean_energy < 1e-4).any():
-                        if i % self.print_freq == 0:
-                            print(f"Skipping Batch {i}: Silent or extremely quiet clean reference detected.")
-                        continue
-                    
-                    batch_size = noisy_batch.shape[0]  # B
-                    num_samples = noisy_batch.shape[2] # T
-                    mixture_lengths = torch.full((batch_size,), num_samples, dtype=torch.int64).to(noisy_batch.device)
-                    
-                    if args.use_cuda:
-                        padded_mixture = noisy_batch.cuda() # B x C x T
-                        mixture_lengths = mixture_lengths.cuda() # B
-                        padded_source = clean_batch.cuda() # B x T
-                        padded_source = padded_source.unsqueeze(1)
-                    
-                    estimate_source = model(padded_mixture) # B x 1 x T
-                    
-                    # loss = -si_snr(estimate_source, padded_source, debug=False)
-                        
-                    M,_,T = padded_mixture.shape    
-                    mixture_ref = torch.chunk(padded_mixture, 9, dim =1)[0] #[M, ch, T] -> [M, 1, T]
-                    mixture_ref = mixture_ref.view(M,T) #[M, 1, T] -> [M, T]
-                    
-                    mixture = remove_pad(mixture_ref, mixture_lengths)
-                    source = remove_pad(padded_source, mixture_lengths)
-                    estimate_source = remove_pad(estimate_source, mixture_lengths)
-                    
-                    # for each utterance
-                    for mix, src_ref, src_est in zip(mixture, source, estimate_source):
-                        # print("Utt", total_cnt + 1)
-                        mix = np.squeeze(mix); src_ref = np.squeeze(src_ref); src_est = np.squeeze(src_est)
-                        mix = mix.real.astype('float32')
-                        mix = mix/mix.max(); src_ref = src_ref/src_ref.max(); src_est = src_est/src_est.max()
-                        SISNRi, SISNR_before, SISNR_after = cal_SISNRi(src_ref, src_est, mix)
-                        # SISNRi, SISNR_before, SISNR_after = cal_SISNRi(src_est, src_ref, mix)
-                        # print("\tSI-SNRi={0:.2f}".format(SISNRi))
-                        # print("\tNoisy SI-SNR={0:.2f}".format(SISNR_before))
-                        total_SISNRi += SISNRi
-                        total_SISNRb += SISNR_before
-                        total_SISNRa += SISNR_after
-                        # sisnri_array.append(SISNRi)
-                        # sisnrb_array.append(SISNR_before)
-
-                        stoi_noisy = np.append(stoi_noisy, stoi(src_ref, mix, 16000, extended=False))
-                        pesq_noisy = np.append(pesq_noisy, pesq(16000, src_ref, mix, mode="wb"))
-                        sisdr_noisy = np.append(sisdr_noisy, SISNR_before)
-
-                        stoi_enhanced = np.append(stoi_enhanced, stoi(src_ref, src_est, 16000, extended=False))
-                        pesq_enhanced = np.append(pesq_enhanced, pesq(16000, src_ref, src_est, mode="wb"))
-                        sisdr_enhanced = np.append(sisdr_enhanced, SISNR_after)
-
-                        total_cnt += 1
-
-                        # # Store in the matrix instead of appending to a flat list
-                        # if j == 1:
-                        #     master_si_sdr_noisy[test_idx, i] = SISNR_before
-                        #     master_si_sdr_enhanced[test_idx, i] = SISNR_after
-                        # else:
-                        #     master_si_sdr_noisy[test_idx + 10, i] = SISNR_before
-                        #     master_si_sdr_enhanced[test_idx + 10, i] = SISNR_after
-                if wandb_active:
-                    wandb.log({
-                        "test/stoi_noisy": float(stoi_noisy.mean()),
-                        "test/pesq_noisy": float(pesq_noisy.mean()),
-                        "test/si_sdr_noisy": float(sisdr_noisy.mean()),
-                        "test/stoi_enhanced": float(stoi_enhanced.mean()),
-                        "test/pesq_enhanced": float(pesq_enhanced.mean()),
-                        "test/si_sdr_enhanced": float(sisdr_enhanced.mean())
-                    })
-
-                    wandb.log({
-                        "audio/clean": wandb.Audio(src_ref, sample_rate=16000),
-                        "audio/enhanced": wandb.Audio(src_est, sample_rate=16000),
-                        "audio/noisy": wandb.Audio(mix, sample_rate=16000),
-                    })
-                    wandb.finish()
-                
-            # np.save('FaSNet/sisnri.npy',np.array(sisnri_array))
-            # np.save('FaSNet/sisnrb.npy',np.array(sisnrb_array))
-
-            print(f"---------- results for: {array_name} ----------")
-
-            # Format: metric name  noisy -> enhanced (improvement)
-            print(f"SI-SDR: {sisdr_noisy.mean():.2f} -> {sisdr_enhanced.mean():.2f} ({(total_SISNRi / total_cnt):+.2f})")
-            print(f"PESQ: {pesq_noisy.mean():.2f} -> {pesq_enhanced.mean():.2f} ({pesq_enhanced.mean() - pesq_noisy.mean():+.2f})")
-            print(f"STOI: {stoi_noisy.mean():.3f} -> {stoi_enhanced.mean():.3f} ({stoi_enhanced.mean() - stoi_noisy.mean():+.3f})")
-            # break
-
-
-def cal_SISNRi(src_ref, src_est, mix):
-    """Calculate Scale-Invariant Source-to-Noise Ratio improvement (SI-SNRi)
-    Args:
-        src_ref: numpy.ndarray, [C, T]
-        src_est: numpy.ndarray, [C, T], reordered by best PIT permutation
-        mix: numpy.ndarray, [T]
-    Returns:
-        average_SISNRi
-    """
-    sisnr1 = cal_SISNR(np.squeeze(src_ref), np.squeeze(src_est))
-    sisnr1b = cal_SISNR(np.squeeze(src_ref), mix)
-
-    # src_ref = torch.from_numpy(np.squeeze(src_ref))
-    # src_est = torch.from_numpy(np.squeeze(src_est))
-    # mix = torch.from_numpy(np.squeeze(mix))
-    # sisnr1 = si_snr(src_est.unsqueeze(0), src_ref.unsqueeze(0))
-    # sisnr1b = si_snr(mix.unsqueeze(0), src_ref.unsqueeze(0))
-
-    # print("SISNR base1 {0:.2f} SISNR base2 {1:.2f}, avg {2:.2f}".format(
-    #     sisnr1b, sisnr2b, (sisnr1b+sisnr2b)/2))
-    # print("SISNRi1: {0:.2f}, SISNRi2: {1:.2f}".format(sisnr1, sisnr2))
-    SISNRi = sisnr1 - sisnr1b
-    return SISNRi, sisnr1b, sisnr1
 
 def cal_SISNR(ref_sig, out_sig, eps=1e-8):
-    """Calcuate Scale-Invariant Source-to-Noise Ratio (SI-SNR)
-    Args:
-        ref_sig: numpy.ndarray, [T]
-        out_sig: numpy.ndarray, [T]
-    Returns:
-        SISNR
-    """
     assert len(ref_sig) == len(out_sig)
     ref_sig = ref_sig - np.mean(ref_sig)
     out_sig = out_sig - np.mean(out_sig)
@@ -334,60 +76,168 @@ def cal_SISNR(ref_sig, out_sig, eps=1e-8):
     proj = np.sum(ref_sig * out_sig) * ref_sig / ref_energy
     noise = out_sig - proj
     ratio = np.sum(proj ** 2) / (np.sum(noise ** 2) + eps)
-    sisnr = 10 * np.log(ratio + eps) / np.log(10.0)
-    # sisnr = 10 * np.log(ratio)
-    return sisnr
+    return 10 * np.log(ratio + eps) / np.log(10.0)
 
-def si_snr(estimate: torch.Tensor, reference: torch.Tensor, epsilon=1e-8, debug=False):
-    """
-    Compute Scale-Invariant Signal-to-Noise Ratio (SI-SNR) between estimate and reference signals.
-    
-    Args:
-        estimate (torch.Tensor): Estimated signal, shape [B, T]
-        reference (torch.Tensor): Ground truth signal, shape [B, T]
-        epsilon (float): Small value to avoid division by zero
-        debug (bool): If True, print internal debugging info
 
-    Returns:
-        si_snr (torch.Tensor): SI-SNR per sample, shape [B]
-    """
-    if debug:
-        print(f"[DEBUG] estimate shape: {estimate.shape}, reference shape: {reference.shape}")
+def cal_SISNRi(src_ref, src_est, mix):
+    sisnr_after = cal_SISNR(np.squeeze(src_ref), np.squeeze(src_est))
+    sisnr_before = cal_SISNR(np.squeeze(src_ref), mix)
+    return sisnr_after - sisnr_before, sisnr_before, sisnr_after
 
-    # 1. Zero-mean normalization (along time dimension)
-    estimate = estimate - estimate.mean(dim=1, keepdim=True)
-    reference = reference - reference.mean(dim=1, keepdim=True)
 
-    if debug:
-        print(f"[DEBUG] After zero-mean -> estimate: {estimate.shape}, reference: {reference.shape}")
+def evaluate(args):
+    drop_probs = None
+    if args.drop_probs:
+        drop_probs = [float(x) for x in args.drop_probs.split(',')]
 
-    # 2. Compute the scaling factor
-    dot = (estimate * reference).sum(dim=1, keepdim=True)  # [B, 1]
-    ref_energy = (reference ** 2).sum(dim=1, keepdim=True) + epsilon  # [B, 1]
+    model = conv_tasnet_ic.TasNet.load_model(
+        args.model_path, mode=args.mode, dropout_type=args.dropout_type,
+        drop_prob=args.drop_prob, max_drop=args.max_drop, drop_probs=drop_probs,
+    )
+    print(f"Model loaded: mode={args.mode}")
+    model.eval()
+    if args.use_cuda and torch.cuda.is_available():
+        model.cuda()
 
-    scale = dot / ref_energy  # [B, 1]
-    projection = scale * reference  # [B, T]
+    steering_dir = os.path.join(os.path.dirname(__file__), '..', '..',
+                                'datasets', 'experiment_full_anm', 'steering')
+    grid_path = os.path.join(os.path.dirname(__file__), '..', '..',
+                             'datasets', 'experiment_full_anm', 'utils', 'Lebvedev2702.mat')
 
-    # 3. Compute the noise (error)
-    noise = estimate - projection  # [B, T]
+    test_types = sorted([
+        d for d in os.listdir(args.data_dir)
+        if os.path.isdir(os.path.join(args.data_dir, d)) and not d.startswith('.')
+    ])
 
-    # 4. Power of target and noise
-    target_power = (projection ** 2).sum(dim=1)  # [B]
-    noise_power = (noise ** 2).sum(dim=1) + epsilon  # [B]
+    for test_type in test_types:
+        array_name = test_type.removesuffix("_preprocessed")
 
-    si_snr_value = 10 * torch.log10(target_power / noise_power)  # [B]
+        if args.mode == 'ambidrop':
+            steer_path = os.path.join(steering_dir, f"{array_name}.mat")
+            if not os.path.exists(steer_path):
+                print(f"Skipping {test_type}: steering matrix not found at {steer_path}")
+                continue
+            V = loadmat(steer_path)["V"]
+            grid_mat = loadmat(grid_path)
+            th, ph = grid_mat["th"].squeeze(), grid_mat["ph"].squeeze()
+            data_path = os.path.join(args.data_dir, test_type)
+            test_ds = MatDatasetTest_ASM(data_path, V, th, ph)
+        else:
+            data_path = os.path.join(args.data_dir, test_type)
+            test_ds = SimDS_preprocessed(data_path, '.', mode='baseline')
 
-    if debug:
-        print(f"[DEBUG] target_power: {target_power.mean().item():.4f}, noise_power: {noise_power.mean().item():.4f}")
-        print(f"[DEBUG] SI-SNR mean: {si_snr_value.mean().item():.4f} dB")
+        data_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
-    return si_snr_value.mean()
+        ref_id = pick_reference_id(test_type)
+
+        metrics = {k: [] for k in ['sisdr_noisy', 'sisdr_enhanced',
+                                     'pesq_noisy', 'pesq_enhanced',
+                                     'stoi_noisy', 'stoi_enhanced']}
+
+        if not args.no_wandb:
+            wandb.init(project=f"ConvTasNet_{args.mode}_test",
+                       entity="tatarjit-ben-gurion-university-of-the-negev",
+                       name=array_name, reinit=True)
+
+        with torch.no_grad():
+            for i, data in enumerate(data_loader):
+                noisy_mic_batch = None
+
+                if isinstance(data, (tuple, list)) and len(data) == 4:
+                    noisy_mic_batch, clean_mic, noisy_batch, clean_batch = data
+                    ref_ids_tensor = None
+                elif isinstance(data, (tuple, list)) and len(data) >= 5:
+                    noisy_batch, clean_batch, ref_ids_tensor, _, _ = data
+                    batch_idx_tmp = torch.arange(clean_batch.shape[0])
+                    clean_batch = clean_batch[batch_idx_tmp, ref_ids_tensor, :]
+                else:
+                    noisy_batch, clean_batch = data[0], data[1]
+                    ref_ids_tensor = torch.full((noisy_batch.shape[0],), ref_id, dtype=torch.long)
+                    if clean_batch.dim() == 3 and clean_batch.shape[1] > 1:
+                        clean_batch = clean_batch[:, ref_id, :]
+                    elif clean_batch.dim() == 3:
+                        clean_batch = clean_batch.squeeze(1)
+
+                clean_energy = torch.sqrt(torch.mean(clean_batch**2, dim=-1))
+                if (clean_energy < 1e-4).any():
+                    continue
+
+                batch_size = noisy_batch.shape[0]
+                num_samples = noisy_batch.shape[2]
+                mixture_lengths = torch.full((batch_size,), num_samples, dtype=torch.int64)
+
+                if args.use_cuda and torch.cuda.is_available():
+                    noisy_batch = noisy_batch.cuda()
+                    mixture_lengths = mixture_lengths.cuda()
+                    clean_batch = clean_batch.cuda()
+                    if ref_ids_tensor is not None:
+                        ref_ids_tensor = ref_ids_tensor.cuda()
+                    if noisy_mic_batch is not None:
+                        noisy_mic_batch = noisy_mic_batch.cuda()
+
+                padded_source = clean_batch.unsqueeze(1)
+                estimate_source = model(noisy_batch, ref_ids=ref_ids_tensor)
+
+                # Noisy reference: always use mic-domain ref mic for fair comparison
+                if noisy_mic_batch is not None:
+                    mixture_ref = noisy_mic_batch[:, ref_id, :].unsqueeze(1)
+                    clean_ref_for_noisy = clean_mic[:, ref_id, :] if clean_mic.dim() == 3 else clean_mic
+                else:
+                    mixture_ref = noisy_batch[:, ref_id, :].unsqueeze(1)
+                    clean_ref_for_noisy = clean_batch
+
+                mixture_ref = mixture_ref.view(batch_size, -1)
+                noisy_mixture_lengths = torch.full((batch_size,), mixture_ref.shape[1], dtype=torch.int64)
+
+                mixture = remove_pad(mixture_ref, noisy_mixture_lengths)
+                source = remove_pad(padded_source, mixture_lengths)
+                estimate_source = remove_pad(estimate_source, mixture_lengths)
+
+                # For noisy metrics, use mic-domain clean at ref mic
+                if noisy_mic_batch is not None:
+                    clean_for_noisy = clean_ref_for_noisy
+                    clean_for_noisy = clean_for_noisy / (clean_for_noisy.abs().max() + 1e-8)
+                    noisy_src_ref = remove_pad(clean_for_noisy.unsqueeze(1), noisy_mixture_lengths)
+                else:
+                    noisy_src_ref = source
+
+                for idx_sample in range(len(mixture)):
+                    mix = np.squeeze(mixture[idx_sample]).real.astype('float32')
+                    src_ref = np.squeeze(source[idx_sample])
+                    src_est = np.squeeze(estimate_source[idx_sample])
+                    mix = mix / (np.abs(mix).max() + 1e-8)
+                    src_ref = src_ref / (np.abs(src_ref).max() + 1e-8)
+                    src_est = src_est / (np.abs(src_est).max() + 1e-8)
+
+                    # Noisy metrics: compare mic-domain noisy vs mic-domain clean
+                    if noisy_mic_batch is not None:
+                        noisy_clean = np.squeeze(noisy_src_ref[idx_sample])
+                        noisy_clean = noisy_clean / (np.abs(noisy_clean).max() + 1e-8)
+                    else:
+                        noisy_clean = src_ref
+
+                    SISNR_before = cal_SISNR(noisy_clean, mix)
+                    SISNR_after = cal_SISNR(src_ref, src_est)
+
+                    metrics['stoi_noisy'].append(stoi(noisy_clean, mix, 16000, extended=False))
+                    metrics['pesq_noisy'].append(pesq(16000, noisy_clean, mix, mode="wb"))
+                    metrics['sisdr_noisy'].append(SISNR_before)
+                    metrics['stoi_enhanced'].append(stoi(src_ref, src_est, 16000, extended=False))
+                    metrics['pesq_enhanced'].append(pesq(16000, src_ref, src_est, mode="wb"))
+                    metrics['sisdr_enhanced'].append(SISNR_after)
+
+        if not args.no_wandb:
+            wandb.log({f"test/{k}": float(np.mean(v)) for k, v in metrics.items() if v})
+            wandb.finish()
+
+        si_sdri = np.mean(metrics['sisdr_enhanced']) - np.mean(metrics['sisdr_noisy'])
+        print(f"---------- {array_name} ----------")
+        print(f"  SI-SDR: {np.mean(metrics['sisdr_noisy']):.2f} -> {np.mean(metrics['sisdr_enhanced']):.2f} ({si_sdri:+.2f})")
+        print(f"  PESQ:   {np.mean(metrics['pesq_noisy']):.2f} -> {np.mean(metrics['pesq_enhanced']):.2f}")
+        print(f"  STOI:   {np.mean(metrics['stoi_noisy']):.3f} -> {np.mean(metrics['stoi_enhanced']):.3f}")
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
     evaluate(args)
-
-
-#runai-bgu submit python -n sh-convtasnet-test2 -c 20 -m 80G -g 1 --conda venv -- "python /Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ConvTasNet/src/evaluate.py"
