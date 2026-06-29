@@ -10,19 +10,19 @@ Available checkpoints:
 Examples:
     # AmbiDrop with SHChannelDropout
     python ConvTasNet/src/evaluate.py --mode ambidrop \
-        --model_path ConvTasNet/checkpoints/run_2026-04-09_08-35/final.pth.tar \
+        --model_path checkpoints/ConvTasNet/run_2026-04-09_08-35/final.pth.tar \
         --data_dir datasets/experiment_full_anm/test_of_train_ds
 
     # AmbiDrop with PerChDropout
     python ConvTasNet/src/evaluate.py --mode ambidrop \
-        --model_path ConvTasNet/checkpoints/run_2026-04-07_15-27/final.pth.tar \
+        --model_path checkpoints/ConvTasNet/run_2026-04-07_15-27/final.pth.tar \
         --data_dir datasets/experiment_full_anm/test_of_test_ds \
         --dropout_type PerChDropout \
         --drop_probs "0,0.1,0.45,0.1,0.45,1,0.75,1,0.45"
 
     # Baseline
     python ConvTasNet/src/evaluate.py --mode baseline \
-        --model_path ConvTasNet/checkpoints/run_2026-04-09_10-55/final.pth.tar \
+        --model_path checkpoints/ConvTasNet/run_2026-04-09_10-55/final.pth.tar \
         --data_dir datasets/experiment_full_anm/test_of_test_ds_preprocessed
 """
 
@@ -30,31 +30,29 @@ import argparse
 import os
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-
-from data import SimDS_preprocessed, MatDatasetTest, MatDatasetTest_ASM
-import conv_tasnet_ic
-from utils import remove_pad
-from pesq import pesq
-from pystoi import stoi
 from scipy.io import loadmat
 
-import wandb
-wandb.login()
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from ConvTasNet.datasets import SimDS_preprocessed, MatDatasetTest_ASM
+import ConvTasNet.model as conv_tasnet_model
+from ConvTasNet.utils import remove_pad
 from ambidrop.constants import REF_IDX_MAP
+from pesq import pesq
+from pystoi import stoi
+import wandb
+
+wandb.login()
 
 parser = argparse.ArgumentParser('Evaluate IC Conv-TasNet')
 parser.add_argument('--mode', choices=['baseline', 'ambidrop'], default='ambidrop')
 parser.add_argument('--model_path', type=str, required=True)
-parser.add_argument('--data_dir', type=str, default=None,
-                    help='Directory containing array subdirectories')
+parser.add_argument('--data_dir', type=str, required=True)
 parser.add_argument('--use_cuda', type=int, default=1)
 parser.add_argument('--sample_rate', default=16000, type=int)
-parser.add_argument('--batch_size', default=1, type=int)
 parser.add_argument('--dropout_type', default='SHChannelDropout')
 parser.add_argument('--drop_prob', default=0.4, type=float)
 parser.add_argument('--max_drop', default=3, type=int)
@@ -62,46 +60,38 @@ parser.add_argument('--drop_probs', type=str, default=None)
 parser.add_argument('--no_wandb', action='store_true')
 
 
-def pick_reference_id(test_type):
-    clean_name = test_type.removesuffix("_preprocessed")
-    key_with = test_type if test_type in REF_IDX_MAP else clean_name + "_preprocessed"
-    return REF_IDX_MAP.get(key_with, REF_IDX_MAP.get(clean_name + "_preprocessed", 1)) - 1
-
-
-def cal_SISNR(ref_sig, out_sig, eps=1e-8):
+def cal_sisnr(ref_sig, out_sig, eps=1e-8):
+    """Numpy SI-SNR between two 1D signals."""
     assert len(ref_sig) == len(out_sig)
     ref_sig = ref_sig - np.mean(ref_sig)
     out_sig = out_sig - np.mean(out_sig)
     ref_energy = np.sum(ref_sig ** 2) + eps
     proj = np.sum(ref_sig * out_sig) * ref_sig / ref_energy
     noise = out_sig - proj
-    ratio = np.sum(proj ** 2) / (np.sum(noise ** 2) + eps)
-    return 10 * np.log(ratio + eps) / np.log(10.0)
+    return 10 * np.log10(np.sum(proj ** 2) / (np.sum(noise ** 2) + eps))
 
 
-def cal_SISNRi(src_ref, src_est, mix):
-    sisnr_after = cal_SISNR(np.squeeze(src_ref), np.squeeze(src_est))
-    sisnr_before = cal_SISNR(np.squeeze(src_ref), mix)
-    return sisnr_after - sisnr_before, sisnr_before, sisnr_after
+def get_ref_id(test_type):
+    """Get 0-based reference mic index from array name."""
+    clean_name = test_type.removesuffix("_preprocessed")
+    key = test_type if test_type in REF_IDX_MAP else clean_name + "_preprocessed"
+    return REF_IDX_MAP.get(key, 1) - 1
 
 
 def evaluate(args):
-    drop_probs = None
-    if args.drop_probs:
-        drop_probs = [float(x) for x in args.drop_probs.split(',')]
+    drop_probs = [float(x) for x in args.drop_probs.split(',')] if args.drop_probs else None
 
-    model = conv_tasnet_ic.TasNet.load_model(
+    model = conv_tasnet_model.TasNet.load_model(
         args.model_path, mode=args.mode, dropout_type=args.dropout_type,
-        drop_prob=args.drop_prob, max_drop=args.max_drop, drop_probs=drop_probs,
-    )
+        drop_prob=args.drop_prob, max_drop=args.max_drop, drop_probs=drop_probs)
     print(f"Model loaded: mode={args.mode}")
     model.eval()
     if args.use_cuda and torch.cuda.is_available():
         model.cuda()
 
-    steering_dir = os.path.join(os.path.dirname(__file__), '..', '..',
+    steering_dir = os.path.join(os.path.dirname(__file__), '..',
                                 'datasets', 'experiment_full_anm', 'steering')
-    grid_path = os.path.join(os.path.dirname(__file__), '..', '..',
+    grid_path = os.path.join(os.path.dirname(__file__), '..',
                              'datasets', 'experiment_full_anm', 'utils', 'Lebvedev2702.mat')
 
     test_types = sorted([
@@ -111,24 +101,21 @@ def evaluate(args):
 
     for test_type in test_types:
         array_name = test_type.removesuffix("_preprocessed")
+        ref_id = get_ref_id(test_type)
 
         if args.mode == 'ambidrop':
             steer_path = os.path.join(steering_dir, f"{array_name}.mat")
             if not os.path.exists(steer_path):
-                print(f"Skipping {test_type}: steering matrix not found at {steer_path}")
+                print(f"Skipping {test_type}: steering not found")
                 continue
             V = loadmat(steer_path)["V"]
             grid_mat = loadmat(grid_path)
             th, ph = grid_mat["th"].squeeze(), grid_mat["ph"].squeeze()
-            data_path = os.path.join(args.data_dir, test_type)
-            test_ds = MatDatasetTest_ASM(data_path, V, th, ph)
+            test_ds = MatDatasetTest_ASM(os.path.join(args.data_dir, test_type), V, th, ph)
         else:
-            data_path = os.path.join(args.data_dir, test_type)
-            test_ds = SimDS_preprocessed(data_path, '.', mode='baseline')
+            test_ds = SimDS_preprocessed(os.path.join(args.data_dir, test_type), '.', mode='baseline')
 
         data_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
-
-        ref_id = pick_reference_id(test_type)
 
         metrics = {k: [] for k in ['sisdr_noisy', 'sisdr_enhanced',
                                      'pesq_noisy', 'pesq_enhanced',
@@ -140,7 +127,7 @@ def evaluate(args):
                        name=array_name, reinit=True)
 
         with torch.no_grad():
-            for i, data in enumerate(data_loader):
+            for data in data_loader:
                 noisy_mic_batch = None
 
                 if isinstance(data, (tuple, list)) and len(data) == 4:
@@ -148,8 +135,8 @@ def evaluate(args):
                     ref_ids_tensor = None
                 elif isinstance(data, (tuple, list)) and len(data) >= 5:
                     noisy_batch, clean_batch, ref_ids_tensor, _, _ = data
-                    batch_idx_tmp = torch.arange(clean_batch.shape[0])
-                    clean_batch = clean_batch[batch_idx_tmp, ref_ids_tensor, :]
+                    batch_idx = torch.arange(clean_batch.shape[0])
+                    clean_batch = clean_batch[batch_idx, ref_ids_tensor, :]
                 else:
                     noisy_batch, clean_batch = data[0], data[1]
                     ref_ids_tensor = torch.full((noisy_batch.shape[0],), ref_id, dtype=torch.long)
@@ -178,7 +165,6 @@ def evaluate(args):
                 padded_source = clean_batch.unsqueeze(1)
                 estimate_source = model(noisy_batch, ref_ids=ref_ids_tensor)
 
-                # Noisy reference: always use mic-domain ref mic for fair comparison
                 if noisy_mic_batch is not None:
                     mixture_ref = noisy_mic_batch[:, ref_id, :].unsqueeze(1)
                     clean_ref_for_noisy = clean_mic[:, ref_id, :] if clean_mic.dim() == 3 else clean_mic
@@ -193,10 +179,8 @@ def evaluate(args):
                 source = remove_pad(padded_source, mixture_lengths)
                 estimate_source = remove_pad(estimate_source, mixture_lengths)
 
-                # For noisy metrics, use mic-domain clean at ref mic
                 if noisy_mic_batch is not None:
-                    clean_for_noisy = clean_ref_for_noisy
-                    clean_for_noisy = clean_for_noisy / (clean_for_noisy.abs().max() + 1e-8)
+                    clean_for_noisy = clean_ref_for_noisy / (clean_ref_for_noisy.abs().max() + 1e-8)
                     noisy_src_ref = remove_pad(clean_for_noisy.unsqueeze(1), noisy_mixture_lengths)
                 else:
                     noisy_src_ref = source
@@ -209,22 +193,18 @@ def evaluate(args):
                     src_ref = src_ref / (np.abs(src_ref).max() + 1e-8)
                     src_est = src_est / (np.abs(src_est).max() + 1e-8)
 
-                    # Noisy metrics: compare mic-domain noisy vs mic-domain clean
                     if noisy_mic_batch is not None:
                         noisy_clean = np.squeeze(noisy_src_ref[idx_sample])
                         noisy_clean = noisy_clean / (np.abs(noisy_clean).max() + 1e-8)
                     else:
                         noisy_clean = src_ref
 
-                    SISNR_before = cal_SISNR(noisy_clean, mix)
-                    SISNR_after = cal_SISNR(src_ref, src_est)
-
+                    metrics['sisdr_noisy'].append(cal_sisnr(noisy_clean, mix))
+                    metrics['sisdr_enhanced'].append(cal_sisnr(src_ref, src_est))
                     metrics['stoi_noisy'].append(stoi(noisy_clean, mix, 16000, extended=False))
                     metrics['pesq_noisy'].append(pesq(16000, noisy_clean, mix, mode="wb"))
-                    metrics['sisdr_noisy'].append(SISNR_before)
                     metrics['stoi_enhanced'].append(stoi(src_ref, src_est, 16000, extended=False))
                     metrics['pesq_enhanced'].append(pesq(16000, src_ref, src_est, mode="wb"))
-                    metrics['sisdr_enhanced'].append(SISNR_after)
 
         if not args.no_wandb:
             wandb.log({f"test/{k}": float(np.mean(v)) for k, v in metrics.items() if v})

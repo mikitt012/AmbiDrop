@@ -15,14 +15,17 @@ Examples:
 
 import argparse
 import os
+import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import torch
 from torch.utils.data import DataLoader
 
-from data import MergedDataset, MatDataset, SimDS_preprocessed
-from solver import Solver
-import conv_tasnet_ic
+from ConvTasNet.datasets import MergedDataset, MatDataset, SimDS_preprocessed
+from ConvTasNet.solver import Solver
+import ConvTasNet.model as conv_tasnet_model
 import wandb
 
 wandb.login()
@@ -68,7 +71,7 @@ parser.add_argument('--lr', default=1e-3, type=float)
 parser.add_argument('--momentum', default=0.0, type=float)
 parser.add_argument('--l2', default=0.0, type=float)
 
-base_save_path = os.path.join(os.path.dirname(__file__), '..', 'checkpoints')
+base_save_path = os.path.join(os.path.dirname(__file__), '..', 'checkpoints', 'ConvTasNet')
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 save_folder = os.path.join(base_save_path, f"run_{timestamp}")
 
@@ -77,9 +80,6 @@ parser.add_argument('--checkpoint', default=0, type=int)
 parser.add_argument('--continue_from', default='')
 parser.add_argument('--model_path', default='final.pth.tar')
 parser.add_argument('--print_freq', default=10, type=int)
-parser.add_argument('--visdom', type=int, default=0)
-parser.add_argument('--visdom_epoch', type=int, default=0)
-parser.add_argument('--visdom_id', default='TasNet training')
 parser.add_argument('--no_wandb', action='store_true')
 
 
@@ -120,7 +120,7 @@ def main(args):
     data = {'tr_loader': tr_loader, 'cv_loader': cv_loader}
     print(f'Data loaded: {len(tr_dataset)} train, {len(cv_dataset)} val')
 
-    model = conv_tasnet_ic.TasNet(
+    model = conv_tasnet_model.TasNet(
         args.mic_num, args.num_spk, args.enc_dim, args.feature_dim, args.ch_dim,
         args.sample_rate, args.win, args.layer, args.stack, args.kernel, args.causal,
         mode=args.mode,

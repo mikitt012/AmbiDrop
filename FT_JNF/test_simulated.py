@@ -44,9 +44,9 @@ import wandb
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from ambidrop.models import FT_JNF
+from FT_JNF.model import FT_JNF
 from ambidrop.losses import si_snr
-from ambidrop.datasets import SimDS_preprocessed
+from FT_JNF.datasets import SimDS_preprocessed
 from ambidrop.checkpoint import load_checkpoint
 from ambidrop.signal_utils import zero_random_channels
 from ambidrop.constants import (

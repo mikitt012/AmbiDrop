@@ -41,10 +41,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def run_and_collect(checkpoint_path, data_dir):
     """Run inference and collect per-example SI-SDR values."""
-    from ambidrop.models import FT_JNF
+    from FT_JNF.model import FT_JNF
     from ambidrop.checkpoint import load_checkpoint
-    from ambidrop.constants import CHECKPOINT_REGISTRY, REF_IDX_MAP, get_device
-    from scripts.test_simulated import evaluate_array
+    from FT_JNF.constants import CHECKPOINT_REGISTRY, REF_IDX_MAP, get_device
+    from FT_JNF.test_simulated import evaluate_array
 
     ckpt_name = os.path.basename(checkpoint_path)
     config = CHECKPOINT_REGISTRY.get(ckpt_name, {

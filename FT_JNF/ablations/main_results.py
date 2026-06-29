@@ -32,7 +32,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from ambidrop.constants import CHECKPOINT_REGISTRY
+from FT_JNF.constants import CHECKPOINT_REGISTRY
 
 METHODS = {
     "FT-JNF (Baseline)": {
@@ -48,8 +48,8 @@ METHODS = {
 
 def run_table_evaluation(methods, data_dir, checkpoint_dir, dataset_label):
     """Evaluate all methods on a dataset, return list of result rows."""
-    from scripts.test_simulated import evaluate_array
-    from ambidrop.models import FT_JNF
+    from FT_JNF.test_simulated import evaluate_array
+    from FT_JNF.model import FT_JNF
     from ambidrop.checkpoint import load_checkpoint
     from ambidrop.constants import REF_IDX_MAP, get_device
 
@@ -166,7 +166,7 @@ def main():
     p = argparse.ArgumentParser(description="Main results tables (Tables I & II)")
     p.add_argument('--train-data-dir', default=None)
     p.add_argument('--test-data-dir', default=None)
-    p.add_argument('--checkpoint-dir', default='checkpoints')
+    p.add_argument('--checkpoint-dir', default='checkpoints/FT_JNF')
     p.add_argument('--from-csv', default=None)
     p.add_argument('--output', default='figures/table1_simulated.png')
     p.add_argument('--save-csv', default=None)

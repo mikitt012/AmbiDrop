@@ -18,7 +18,7 @@ except ImportError:
     def sph_harm(m, n, phi, theta):
         return sph_harm_y(n, m, theta, phi)
 
-project_root = os.path.join(os.path.dirname(__file__), '..', '..')
+project_root = os.path.join(os.path.dirname(__file__), '..')
 if project_root not in sys.path:
     sys.path.append(project_root)
 

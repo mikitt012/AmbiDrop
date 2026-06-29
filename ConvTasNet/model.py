@@ -1,13 +1,13 @@
 import sys
 import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-import models_attention_set
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import ConvTasNet.modules as modules
 from ambidrop.dropouts import SHChannelDropout1D, PerChDropout1D
 
 
@@ -40,7 +40,7 @@ class TasNet(nn.Module):
 
         self.encoder = torch.nn.Conv1d(1, self.enc_dim, self.win, bias=False, stride=self.stride)
 
-        self.TCN = models_attention_set.TCN(
+        self.TCN = modules.TCN(
             self.mic_num, self.ch_dim, self.enc_dim, self.enc_dim * self.num_spk,
             self.feature_dim, self.feature_dim * 4,
             self.layer, self.stack, self.kernel, causal=self.causal

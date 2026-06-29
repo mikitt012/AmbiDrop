@@ -8,11 +8,12 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import torch
 from torch.utils.data import DataLoader
 
-from ambidrop.models import FT_JNF
+from FT_JNF.model import FT_JNF
 from ambidrop.losses import si_snr
-from ambidrop.datasets import SimDS_preprocessed
+from FT_JNF.datasets import SimDS_preprocessed
 from ambidrop.checkpoint import load_checkpoint
-from ambidrop.constants import N_FFT, HOP_LENGTH, WIN_LENGTH, CHECKPOINT_REGISTRY
+from ambidrop.constants import N_FFT, HOP_LENGTH, WIN_LENGTH
+from FT_JNF.constants import CHECKPOINT_REGISTRY
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 torch.manual_seed(0)
@@ -84,7 +85,7 @@ print("=" * 60)
 print("TEST 3: Checkpoint loading + inference")
 print("=" * 60)
 ckpt_file = 'SH_FT_JNF,2025-12-01_10-08-18.pt'
-ckpt_path = os.path.join(BASE, 'checkpoints', ckpt_file)
+ckpt_path = os.path.join(BASE, 'checkpoints', 'FT_JNF', ckpt_file)
 if os.path.exists(ckpt_path):
     reg = CHECKPOINT_REGISTRY[ckpt_file]
     net3 = FT_JNF(input_dim=reg['input_dim'], hidden1_dim=reg['hidden1'],

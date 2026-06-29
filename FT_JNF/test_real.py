@@ -58,7 +58,7 @@ import wandb
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from ambidrop.models import FT_JNF
+from FT_JNF.model import FT_JNF
 from ambidrop.losses import si_snr
 from ambidrop.checkpoint import load_checkpoint
 from ambidrop.constants import get_device, N_FFT, HOP_LENGTH, WIN_LENGTH

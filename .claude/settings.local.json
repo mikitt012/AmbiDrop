@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/ambidrop\")",
+      "Bash(KMP_DUPLICATE_LIB_OK=TRUE python scripts/train.py --mode baseline --data-dir datasets/experiment_full_anm --train-split mic_train_ds_preprocessed_merged --val-split mic_val_ds_preprocessed_merged --input-dim 14 --hidden1 64 --hidden2 64 --epochs 1 --batch-size 2 --no-wandb)",
+      "Bash(KMP_DUPLICATE_LIB_OK=TRUE python scripts/train.py --mode ambidrop --data-dir . --train-split si_tr_s_preprocessed_full --val-split si_dt_05_preprocessed_full --input-dim 18 --hidden1 64 --hidden2 64 --dropout-type SHChannelDropout --drop-prob 0.4 --max-drop 3 --epochs 1 --batch-size 2 --no-wandb)",
+      "Bash(KMP_DUPLICATE_LIB_OK=TRUE python scripts/test_simulated.py --mode ambidrop --checkpoint checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt --data-dir datasets/experiment_full_anm/test_of_train_ds_preprocessed --input-dim 18 --hidden1 64 --hidden2 64 --dropout-type SHChannelDropout --drop-prob 0.4 --max-drop 3 --epoch 200 --no-wandb)",
+      "Bash(KMP_DUPLICATE_LIB_OK=TRUE python scripts/test_simulated.py --mode ambidrop --checkpoint checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt --data-dir datasets/experiment_full_anm/test_of_test_ds_preprocessed --input-dim 18 --hidden1 64 --hidden2 64 --dropout-type SHChannelDropout --drop-prob 0.4 --max-drop 3 --epoch 200 --no-wandb)",
+      "Bash(python -c \"from scipy.special import sph_harm\")",
+      "Bash(python -c \"from scipy.special import sph_harm_y\")",
+      "Bash(python -c \"import scipy.special; print\\([x for x in dir\\(scipy.special\\) if 'harm' in x.lower\\(\\)]\\)\")",
+      "Bash(python -c \"import scipy.special; print\\([x for x in dir\\(scipy.special\\) if 'harm' in x.lower\\(\\) or 'sph' in x.lower\\(\\)]\\)\")",
+      "Bash(KMP_DUPLICATE_LIB_OK=TRUE python scripts/test_real.py --mode ambidrop --checkpoint checkpoints/SH_FT_JNF,2025-12-01_10-08-18.pt --aria-data-dir datasets/aria_ds --scenarios mixed_data_1_5int --atf simulated --cnm-source compute --regularization tikhonov --input-dim 18 --hidden1 64 --hidden2 64 --dropout-type SHChannelDropout --drop-prob 0.4 --max-drop 3 --epoch 200 --no-wandb)",
+      "Bash(python -c ' *)",
+      "Bash(mkdir -p FT_JNF/ablations)",
+      "Bash(mkdir -p checkpoints/FT_JNF)",
+      "Bash(mkdir -p checkpoints/ConvTasNet)"
+    ],
+    "additionalDirectories": [
+      "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop"
+    ]
+  }
+}
