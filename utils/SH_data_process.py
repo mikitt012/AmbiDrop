@@ -193,7 +193,7 @@ def preprocess_and_save_to_folder(data_dir, data_type, train, out_root, max_leng
 
     for folder in tqdm(subfolders, desc=f"Processing {data_type}"):
         try:
-            out_file = os.path.join(output_path, folder + ".pt")
+            out_file = folder + ".pt"
             save_path = os.path.join(output_path, out_file)
             # 2. Check if it already exists
             if os.path.exists(save_path):
@@ -316,22 +316,23 @@ def preprocess_and_save_to_folder(data_dir, data_type, train, out_root, max_leng
 #     out_root = '/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed_swap_swap'
 # )
 
-data_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds"
-out_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed"
+if __name__ == "__main__":
+    data_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds"
+    out_root = "/Users/mikitatarjitzky/Documents/AmbiDrop Code/AmbiDrop/datasets/experiment_full_anm/test_of_test_ds_preprocessed"
 
-for data_type in sorted(os.listdir(data_root)):
-    input_path = os.path.join(data_root, data_type)
-    
-    # Skip if not a directory
-    if not os.path.isdir(input_path):
-        continue
+    for data_type in sorted(os.listdir(data_root)):
+        input_path = os.path.join(data_root, data_type)
 
-    preprocess_and_save_to_folder(
-        data_dir=data_root,
-        data_type=data_type,
-        train=False,
-        out_root=out_root
-    )
+        # Skip if not a directory
+        if not os.path.isdir(input_path):
+            continue
+
+        preprocess_and_save_to_folder(
+            data_dir=data_root,
+            data_type=data_type,
+            train=False,
+            out_root=out_root
+        )
 
 def check_tensor_shapes(preprocessed_folder):
     """
