@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """
-Unified IC Conv-TasNet evaluation script.
+Evaluation script for IC Conv-TasNet on simulated array data.
+
+Public interface:
+    evaluate — run inference over all array subdirectories in data_dir and print SI-SDR / PESQ / STOI
 
 Available checkpoints:
     run_2026-04-09_08-35  AmbiDrop, SHChannelDropout (p=0.4, max=3)

@@ -1,3 +1,10 @@
+"""
+FT-JNF checkpoint registry mapping filename to model architecture configuration.
+
+Public interface:
+    CHECKPOINT_REGISTRY — dict mapping checkpoint filename to architecture config dict
+                          (keys: mode, input_dim, hidden1, hidden2, dropout, drop_prob, max_drop, drop_probs)
+"""
 # ── Checkpoint registry ──────────────────────────────────────────────────────
 # Maps each checkpoint filename to the model/dropout configuration it was
 # trained with. This ensures you always know how to reconstruct the model

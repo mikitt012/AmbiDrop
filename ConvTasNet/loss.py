@@ -1,3 +1,10 @@
+"""
+SI-SNR loss with permutation-invariant training (PIT) for IC Conv-TasNet.
+
+Public interface:
+    cal_loss — compute PIT SI-SNR loss and return reordered estimates
+    cal_si_snr_with_pit — compute per-permutation SI-SNR and return best permutation indices
+"""
 # Created on 2018/12
 # Author: Kaituo XU
 

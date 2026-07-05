@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """
-Unified IC Conv-TasNet training script.
+Training entry point for IC Conv-TasNet (AmbiDrop and baseline modes).
+
+Public interface:
+    main — parse arguments, build datasets/model/optimizer, and run Solver.train()
 
 Examples:
     # AmbiDrop mode (9 SH channels, with dropout)

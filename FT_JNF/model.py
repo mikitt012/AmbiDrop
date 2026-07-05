@@ -1,3 +1,9 @@
+"""
+FT-JNF model definition for frequency-domain speech enhancement.
+
+Public interface:
+    FT_JNF — two-layer BiLSTM network (frequency axis then time axis) that outputs a complex IRM applied to the reference channel; supports SHChannelDropout and PerChDropout
+"""
 import torch
 import torch.nn as nn
 

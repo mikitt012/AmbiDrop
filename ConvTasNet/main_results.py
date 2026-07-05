@@ -1,8 +1,11 @@
 """
-ConvTasNet Main Results Table
+Generates the main results table comparing IC Conv-TasNet baseline vs AmbiDrop.
 
-Generates performance comparison table for IC Conv-TasNet baseline vs AmbiDrop
-on simulated training and test arrays.
+Runs evaluate.py as a subprocess for each configuration and renders a PNG table
+of SI-SDR / PESQ / STOI on training and test arrays.
+
+Public interface:
+    main — parse arguments, run evaluate.py for each model/dataset combo, and save a PNG table
 
 Usage:
     python ConvTasNet/main_results.py --output figures/table_convtasnet.png

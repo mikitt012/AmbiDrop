@@ -1,3 +1,10 @@
+"""
+SI-SNR loss functions for speech enhancement training and evaluation.
+
+Public interface:
+    si_snr — scale-invariant SNR for real-valued time-domain signals, shape [B, T]
+    complex_si_snr — SI-SNR for complex-valued signals (e.g. STFT bins)
+"""
 import torch
 
 

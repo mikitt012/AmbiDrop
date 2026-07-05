@@ -1,140 +1,28 @@
 """
-Dataset classes and signal processing utilities for IC Conv-TasNet.
+Dataset classes for IC Conv-TasNet covering training, validation, and inference.
+
+Public interface:
+    MergedDataset — loads preprocessed .pt files listed in a metadata_list.pt file
+    MatDataset — loads raw .mat Ambisonics files and converts to real-valued ACN
+    PrecomputedASMDataset — reads precomputed real-ACN Ambisonics from anmt_array in anm.mat
+    MicToRealAmbisonicsDataset — loads raw p.wav and computes real-ACN Ambisonics on-the-fly via ASM
+    SimDS_preprocessed — loads preprocessed .pt files and converts STFT back to time domain
 """
 import sys
 import os
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch.utils.data import Dataset
 import scipy.io
 from scipy.linalg import svd
-
-try:
-    from scipy.special import sph_harm
-except ImportError:
-    from scipy.special import sph_harm_y
-    def sph_harm(m, n, phi, theta):
-        return sph_harm_y(n, m, theta, phi)
 
 project_root = os.path.join(os.path.dirname(__file__), '..')
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-
-# ── Signal processing helpers ────────────────────────────────────────────────
-
-def process_segment(noisy, clean, target_samples=96000, threshold=1e-3):
-    """Find first speech onset, slice target_samples, pad if needed."""
-    C, T = noisy.shape
-    ref_channel = clean.unsqueeze(0)
-    mask = (clean.abs() > threshold).nonzero()
-    first = mask[0].item() if mask.numel() > 0 else 0
-    last = first + target_samples
-
-    noisy_processed = noisy[:, first:last]
-    clean_processed = ref_channel[:, first:last]
-
-    curr_len = noisy_processed.shape[1]
-    if curr_len < target_samples:
-        padding_needed = target_samples - curr_len
-        noisy_processed = F.pad(noisy_processed, (0, padding_needed), "constant", 0)
-        clean_processed = F.pad(clean_processed, (0, padding_needed), "constant", 0)
-    else:
-        noisy_processed = noisy_processed[:, :target_samples]
-        clean_processed = clean_processed[:, :target_samples]
-
-    return noisy_processed, clean_processed.squeeze()
-
-
-def tensor_to_istft(stft_tensor, length):
-    """Convert STFT tensor [T, F, 2C] back to time-domain [C, T_samples]."""
-    T, F, two_C = stft_tensor.shape
-    C = two_C // 2
-    real = stft_tensor[:, :, :C]
-    imag = stft_tensor[:, :, C:]
-    stft_complex = torch.complex(real, imag)
-    stft_complex = stft_complex.permute(2, 1, 0)
-    waveform = torch.istft(stft_complex, n_fft=512, hop_length=256, win_length=512,
-                           window=torch.hamming_window(window_length=512),
-                           center=True, normalized=False, onesided=True,
-                           return_complex=False, length=length)
-    return waveform
-
-
-def compute_spherical_harmonics_matrix(N, theta, phi):
-    """Compute SH matrix of shape ((N+1)^2, num_samples)."""
-    assert(phi.min() >= 0.0)
-    num_samples = phi.size
-    num_harmonics = (N + 1) ** 2
-    Y_matrix = np.zeros((num_harmonics, num_samples), dtype=complex)
-    index = 0
-    for n in range(N + 1):
-        for m in range(-n, n + 1):
-            Y_matrix[index, :] = sph_harm(m, n, phi, theta)
-            index += 1
-    return Y_matrix
-
-
-def complex_acn_to_real_acn(complex_acn_buffer, max_order, sn3d):
-    """Convert complex ACN buffer to real ACN buffer."""
-    num_channels, num_samples = complex_acn_buffer.shape
-    real_acn_buffer = np.zeros((num_channels, num_samples))
-    for l in range(max_order + 1):
-        sn3d_scale = 1.0 / np.sqrt(2 * l + 1) if sn3d else 1.0
-        n_mid = l**2 + l
-        real_acn_buffer[n_mid, :] = complex_acn_buffer[n_mid, :].real * sn3d_scale
-        for m in range(1, l + 1):
-            n_pos = l**2 + l + m
-            n_neg = l**2 + l - m
-            Y_pos = complex_acn_buffer[n_pos, :]
-            Y_neg = complex_acn_buffer[n_neg, :]
-            real_pos_m = (Y_neg + ((-1)**m) * Y_pos) / np.sqrt(2)
-            real_acn_buffer[n_pos, :] = real_pos_m.real * sn3d_scale
-            real_neg_m = 1j / np.sqrt(2) * (Y_pos - ((-1)**m) * Y_neg)
-            real_acn_buffer[n_neg, :] = real_neg_m.real * sn3d_scale
-    return real_acn_buffer
-
-
-def array_ambisonics_time_domain(p, c_ASM, filt_samp=512):
-    """Convert microphone signals to Ambisonics via time-domain convolution."""
-    T = p.shape[1]
-    N_mic = p.shape[0]
-    num_harmonics = c_ASM.shape[0]
-    anmt_array = np.zeros((num_harmonics, T), dtype=np.float32)
-    for j_idx in range(num_harmonics):
-        c_f = c_ASM[j_idx, :, :].T
-        c_time = np.fft.irfft(c_f, n=filt_samp, axis=1)
-        c_time_cs = np.roll(c_time, filt_samp // 2, axis=1)
-        first_col = c_time_cs[:, [0]]
-        tail_reversed = c_time_cs[:, :0:-1]
-        c_time_filter = np.concatenate([first_col, tail_reversed], axis=1)
-        tmp = np.zeros(T, dtype=np.float64)
-        for m in range(N_mic):
-            full_conv = np.convolve(p[m, :].astype(np.float64),
-                                    c_time_filter[m, :].astype(np.float64), mode='full')
-            start_idx = filt_samp // 2
-            tmp += full_conv[start_idx : start_idx + T]
-        anmt_array[j_idx, :] = tmp
-    return anmt_array
-
-
-def array_ambisonics_time(p, V, th, ph, N):
-    """Full ASM pipeline: compute coefficients with Tikhonov and encode."""
-    from ASM.tikhonov import tikhonov
-
-    V_t = V.T
-    Y = compute_spherical_harmonics_matrix(N, th, ph)
-    Y_real = complex_acn_to_real_acn(Y, 2, sn3d=False)
-    Y = Y_real
-
-    cnm = np.zeros(((N+1)**2, V_t.shape[1], V_t.shape[2]), dtype=np.complex128)
-    for nm in range((N+1)**2):
-        for f in range(V_t.shape[1]):
-            cnm[nm, f] = tikhonov(A=V_t[:, f, :].conj(), b=Y[nm, :])
-
-    return array_ambisonics_time_domain(p, cnm)
+from ambidrop.signal_utils import process_segment, tensor_to_istft, complex_acn_to_real_acn
+from ambidrop.asm import encode_ambisonics
 
 
 # ── Dataset classes ──────────────────────────────────────────────────────────
@@ -175,8 +63,18 @@ class MatDataset(Dataset):
         return anmt_real.float().squeeze(), anmtDirect.squeeze()
 
 
-class MatDatasetTest(Dataset):
-    """Loads test .mat files from folder structure (ex_*/anm.mat + p.wav)."""
+
+class PrecomputedASMDataset(Dataset):
+    """
+    Reads precomputed real-ACN Ambisonics from anm.mat (anmt_array field)
+    instead of computing it on-the-fly from a steering matrix.
+
+    Mirrors MicToRealAmbisonicsDataset: returns full-length signals with no
+    onset-based windowing so results are directly comparable to RESULTS.md.
+
+    Returns the same 4-tuple as MicToRealAmbisonicsDataset:
+        (noisy_mic, clean_mic, anmt_array_tensor, clean_anm)
+    """
     def __init__(self, data_dir):
         self.data_dir = data_dir
         self.folder_list = sorted(
@@ -191,33 +89,26 @@ class MatDatasetTest(Dataset):
     def __getitem__(self, idx):
         import soundfile as sf
         folder_path = os.path.join(self.data_dir, self.folder_list[idx])
-        mat_file = os.path.join(folder_path, "anm.mat")
-        array_file = os.path.join(folder_path, "p.wav")
-        direct_file = os.path.join(folder_path, "pDirect.wav")
+        mat_data = scipy.io.loadmat(os.path.join(folder_path, "anm.mat"))
 
-        mat_data = scipy.io.loadmat(mat_file)
-        noisy_mic, _ = sf.read(array_file)
-        noisy_mic = noisy_mic.T
-        clean_mic, _ = sf.read(direct_file)
-        clean_mic = clean_mic.T
+        noisy_mic, _ = sf.read(os.path.join(folder_path, "p.wav"))
+        clean_mic, _ = sf.read(os.path.join(folder_path, "pDirect.wav"))
+        noisy_mic = noisy_mic.T   # (M, T)
+        clean_mic = clean_mic.T   # (M, T)
 
-        anmt = mat_data['anmt'].astype('complex64')
-        anmt_direct = mat_data['anmtDirect'].astype('float32')
-        anmt_tensor = torch.from_numpy(anmt)
-        anmt_direct_tensor = torch.from_numpy(anmt_direct)
+        anmt_array  = mat_data["anmt_array"].T.astype(np.float32)       # (9, T) real-ACN
+        anmt_direct = mat_data["anmtDirect"][:, 0].real.astype(np.float32)  # (T,) a00
 
-        anmt, anmtDirect = process_segment(anmt_tensor.T, anmt_direct_tensor[:, 0])
-        anmt_real = complex_acn_to_real_acn(anmt, 2, sn3d=False)
-        anmt_real = torch.from_numpy(anmt_real)
-
-        noisy_mic = torch.from_numpy(noisy_mic).float()
-        clean_mic = torch.from_numpy(clean_mic).float()
-
-        return noisy_mic, clean_mic, anmt_real.float().squeeze(), anmtDirect.squeeze()
+        return (
+            torch.from_numpy(noisy_mic).float(),   # (M, T)
+            torch.from_numpy(clean_mic).float(),   # (M, T)
+            torch.from_numpy(anmt_array),          # (9, T)
+            torch.from_numpy(anmt_direct),         # (T,)
+        )
 
 
-class MatDatasetTest_ASM(Dataset):
-    """Loads test data and computes ASM on-the-fly from steering matrix."""
+class MicToRealAmbisonicsDataset(Dataset):
+    """Loads test data and computes real-ACN Ambisonics on-the-fly from steering matrix."""
     def __init__(self, data_dir, V, th, ph):
         self.data_dir = data_dir
         self.V = V
@@ -244,7 +135,7 @@ class MatDatasetTest_ASM(Dataset):
         clean_mic, _ = sf.read(direct_file)
         clean_mic = clean_mic.T
 
-        anmt = array_ambisonics_time(noisy_mic, self.V, self.th, self.ph, N=2)
+        anmt, _ = encode_ambisonics(noisy_mic, self.V, sh_order=2, th=self.th, ph=self.ph, sh_type="real")
         anmt_tensor = torch.from_numpy(anmt).float()
         noisy_mic_tensor = torch.from_numpy(noisy_mic).float()
         clean_mic_tensor = torch.from_numpy(clean_mic).float()
@@ -297,10 +188,12 @@ class SimDS_preprocessed(Dataset):
                     return noisy, clean_anm.float()
                 else:
                     noisy = tensor_to_istft(noisy_tf_mic, clean_mic.shape[-1])
-                    return noisy, clean_mic.float()
+                    return noisy, clean_mic.float(), 0, '', ''
             elif len(data) == 2:
-                noisy_tf, clean = data
-                noisy = tensor_to_istft(noisy_tf, clean.shape[-1])
+                noisy, clean = data
+                if noisy.dim() == 3:  # STFT format (T_frames, F, 2C) → convert to time domain
+                    noisy = tensor_to_istft(noisy, clean.shape[-1])
+                # else: already time domain (C, T) from preprocess_sh_time
                 return noisy, clean.float()
             else:
                 raise ValueError(f"Unexpected tuple length {len(data)} in {file_name}")

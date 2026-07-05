@@ -1,3 +1,9 @@
+"""
+Training loop manager for IC Conv-TasNet with learning-rate halving and early stopping.
+
+Public interface:
+    Solver — orchestrates train/validation epochs, checkpoint saving, and wandb logging
+"""
 import os
 import time
 

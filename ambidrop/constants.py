@@ -1,3 +1,14 @@
+"""
+Project-wide constants and device helper for AmbiDrop.
+
+Public interface:
+    N_FFT — STFT window size (512)
+    HOP_LENGTH — STFT hop length (256)
+    WIN_LENGTH — STFT window length (512)
+    SAMPLE_RATE — audio sample rate in Hz (16000)
+    get_device — return the best available torch device (CUDA or CPU)
+    REF_IDX_MAP — dict mapping array folder name to 1-based reference mic index
+"""
 import torch
 
 # ── STFT defaults ────────────────────────────────────────────────────────────

@@ -1,5 +1,8 @@
 """
-Unified testing script for simulated array data (baseline and AmbiDrop).
+Evaluation script for FT-JNF on preprocessed simulated array data.
+
+Public interface:
+    evaluate_array — run inference on one array type and return per-example SI-SDR / PESQ / STOI metric arrays
 
 Examples:
     # Test AmbiDrop on test arrays
@@ -38,7 +41,7 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from pesq import pesq
+from pesq import pesq, NoUtterancesError
 from pystoi import stoi
 import wandb
 
@@ -184,11 +187,17 @@ def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0):
 
         metrics['stoi_noisy'].append(stoi(s1_mic_cpu.numpy(), y_noisy_cpu.numpy(), 16000, extended=False))
         metrics['si_sdr_noisy'].append(si_snr(y_noisy_cpu.unsqueeze(0), s1_mic_cpu.unsqueeze(0)).item())
-        metrics['pesq_noisy'].append(pesq(16000, s1_mic_cpu.numpy(), y_noisy_cpu.numpy(), mode="wb"))
+        try:
+            metrics['pesq_noisy'].append(pesq(16000, s1_mic_cpu.numpy(), y_noisy_cpu.numpy(), mode="wb"))
+        except NoUtterancesError:
+            metrics['pesq_noisy'].append(float('nan'))
 
         metrics['stoi_enhanced'].append(stoi(s1_cpu.numpy(), s_hat_cpu.numpy(), 16000, extended=False))
         metrics['si_sdr_enhanced'].append(si_snr(s_hat_cpu.unsqueeze(0), s1_cpu.unsqueeze(0)).item())
-        metrics['pesq_enhanced'].append(pesq(16000, s1_cpu.numpy(), s_hat_cpu.numpy(), mode="wb"))
+        try:
+            metrics['pesq_enhanced'].append(pesq(16000, s1_cpu.numpy(), s_hat_cpu.numpy(), mode="wb"))
+        except NoUtterancesError:
+            metrics['pesq_enhanced'].append(float('nan'))
 
     for k in metrics:
         metrics[k] = np.array(metrics[k])

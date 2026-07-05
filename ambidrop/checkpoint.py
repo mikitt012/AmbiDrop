@@ -1,3 +1,10 @@
+"""
+Checkpoint save/load utilities for all AmbiDrop models.
+
+Public interface:
+    load_checkpoint — load a model (and optionally optimizer/scheduler) from a checkpoint list file
+    save_checkpoint — append a new epoch's checkpoint to a checkpoint list file
+"""
 import os
 import torch
 

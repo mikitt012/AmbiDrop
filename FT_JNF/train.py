@@ -1,5 +1,9 @@
 """
-Unified training script for AmbiDrop and baseline FT-JNF models.
+Training script for AmbiDrop and baseline FT-JNF models.
+
+Public interface:
+    training_step_baseline — one training step using per-sample reference mic index from dataset
+    training_step_ambidrop — one training step using a00 (channel 0) as the fixed reference
 
 Examples:
     # Baseline FT-JNF (microphone input)

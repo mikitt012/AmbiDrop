@@ -1,3 +1,13 @@
+"""
+Neural network building blocks for IC Conv-TasNet.
+
+Public interface:
+    TCN — temporal convolutional network: normalisation → channel bottleneck → stacked dilated DepthConv2d blocks → output projection
+    DepthConv1d — single dilated depthwise-separable 2D conv block with residual and skip connections
+    DepthConv2d_Attention — variant of DepthConv1d used in the default TCN stack
+    cLN — cumulative layer normalisation for causal processing
+    FCLayer — fully-connected layer container with optional nonlinearity
+"""
 import numpy as np
 import torch
 import torch.nn as nn

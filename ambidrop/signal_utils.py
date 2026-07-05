@@ -1,23 +1,25 @@
+"""
+Signal processing helpers shared across FT-JNF and Conv-TasNet pipelines.
+
+Public interface:
+    pad_to_length — pad or truncate a (C, T) tensor to a target length
+    pad_or_truncate_numpy — pad or truncate a (C, T) numpy array to a target length
+    add_white_noise_numpy — add white noise at a given SNR to a numpy signal
+    process_segment — onset-detect and window a (noisy, clean) tensor pair
+    zero_random_channels — zero n random SH channels (excluding a00) in a [1,T,F,2C] tensor
+    get_lr — return the current learning rate from an optimizer
+    find_ref_mic — return 0-based index of mic closest to azimuth 0
+    complex_acn_to_real_acn — convert complex ACN Ambisonics to real-valued ACN representation
+    tensor_to_istft — invert an STFT tensor (T_frames, F, 2C) back to time domain (C, T)
+"""
 import torch
 import torch.nn.functional as F
 import numpy as np
-import os
-import scipy.io
+
+from ambidrop.constants import N_FFT, HOP_LENGTH, WIN_LENGTH
 
 
-# ── Torch variants ───────────────────────────────────────────────────────────
-
-def pad_or_truncate_torch(signal: torch.Tensor, target_length: int = 120000) -> torch.Tensor:
-    """Pad or truncate a multichannel signal (C, T) to (C, target_length)."""
-    C, T = signal.shape
-    if T > target_length:
-        return signal[:, :target_length]
-    elif T < target_length:
-        pad_len = target_length - T
-        pad_tensor = torch.zeros(C, pad_len, device=signal.device, dtype=signal.dtype)
-        return torch.cat([signal, pad_tensor], dim=1)
-    return signal
-
+# ── Torch helpers ────────────────────────────────────────────────────────────
 
 def pad_to_length(x: torch.Tensor, target_len: int) -> torch.Tensor:
     """Pad a tensor (C, T) to target_len along time dimension. Truncates if longer."""
@@ -27,17 +29,6 @@ def pad_to_length(x: torch.Tensor, target_len: int) -> torch.Tensor:
     pad = torch.zeros(C, target_len - T, device=x.device, dtype=x.dtype)
     return torch.cat([x, pad], dim=1)
 
-
-def add_white_noise_torch(signal: torch.Tensor, snr_db: float) -> torch.Tensor:
-    """Add white Gaussian noise to a multichannel signal tensor (C, T)."""
-    signal = signal.float()
-    if signal.ndim == 1:
-        signal = signal.unsqueeze(0)
-    signal_power = signal.pow(2).mean(dim=1, keepdim=True)
-    snr_linear = 10 ** (snr_db / 10)
-    noise_power = signal_power / snr_linear
-    noise = torch.randn_like(signal) * torch.sqrt(noise_power)
-    return signal + noise
 
 
 # ── Numpy variants ───────────────────────────────────────────────────────────
@@ -120,34 +111,66 @@ def zero_random_channels(x, n):
     return x
 
 
-def find_max_length(data_dir, data_type, ambisonics=False):
-    """Find the maximum signal length across all .mat files in a dataset directory."""
-    folder_path = os.path.join(data_dir, data_type)
-    files_list = os.listdir(folder_path)
-
-    if ambisonics:
-        mat_files = [f for f in files_list if f.startswith("Ambisonics_") and f.endswith(".mat")]
-    else:
-        mat_files = [f for f in files_list if 'ex' in f and f.endswith(".mat")]
-
-    max_len = 0
-    for f in mat_files:
-        file_path = os.path.join(folder_path, f)
-        data = scipy.io.loadmat(file_path)
-        key = 'anm_t' if ambisonics else 'p'
-        signal = data[key].T
-        max_len = max(max_len, signal.shape[1])
-
-    return max_len
-
 
 # ── Misc helpers ─────────────────────────────────────────────────────────────
-
-def unwrap_model(model):
-    """Unwrap a DataParallel model."""
-    return model.module if isinstance(model, torch.nn.DataParallel) else model
-
 
 def get_lr(optimizer):
     """Get current learning rate from optimizer."""
     return optimizer.param_groups[0]['lr']
+
+
+# ── Reference microphone geometry ───────────────────────────────────────────
+
+def find_ref_mic(mics_az: np.ndarray) -> int:
+    """Return 0-based index of mic closest to azimuth 0 (target speaker direction).
+
+    Handles wrap-around so that an azimuth near 2π is correctly treated as close
+    to 0. Used as a fallback when the array name is not in REF_IDX_MAP.
+    """
+    az = np.asarray(mics_az, dtype=float) % (2 * np.pi)
+    dist = np.minimum(az, 2 * np.pi - az)
+    return int(np.argmin(dist))
+
+
+# ── Ambisonics / STFT conversion helpers ────────────────────────────────────
+
+def complex_acn_to_real_acn(complex_acn_buffer: np.ndarray, max_order: int = 2,
+                             sn3d: bool = False) -> np.ndarray:
+    """
+    Convert complex ACN Ambisonics coefficients to real-valued ACN.
+    Input shape: (num_channels, T). Output shape: (num_channels, T).
+    Works with both numpy arrays and torch tensors.
+    """
+    num_channels, num_samples = complex_acn_buffer.shape
+    real_acn_buffer = np.zeros((num_channels, num_samples))
+    for l in range(max_order + 1):
+        sn3d_scale = 1.0 / np.sqrt(2 * l + 1) if sn3d else 1.0
+        n_mid = l**2 + l
+        real_acn_buffer[n_mid, :] = complex_acn_buffer[n_mid, :].real * sn3d_scale
+        for m in range(1, l + 1):
+            n_pos = l**2 + l + m
+            n_neg = l**2 + l - m
+            Y_pos = complex_acn_buffer[n_pos, :]
+            Y_neg = complex_acn_buffer[n_neg, :]
+            real_pos_m = (Y_neg + ((-1) ** m) * Y_pos) / np.sqrt(2)
+            real_acn_buffer[n_pos, :] = real_pos_m.real * sn3d_scale
+            real_neg_m = 1j / np.sqrt(2) * (Y_pos - ((-1) ** m) * Y_neg)
+            real_acn_buffer[n_neg, :] = real_neg_m.real * sn3d_scale
+    return real_acn_buffer
+
+
+def tensor_to_istft(stft_tensor: torch.Tensor, length: int) -> torch.Tensor:
+    """
+    Convert STFT tensor (T_frames, F, 2C) back to time-domain waveform (C, T_samples).
+    Real and imaginary parts are expected concatenated along the last dimension.
+    """
+    _, _, two_C = stft_tensor.shape
+    C = two_C // 2
+    stft_complex = torch.complex(stft_tensor[:, :, :C], stft_tensor[:, :, C:])
+    stft_complex = stft_complex.permute(2, 1, 0)  # (C, F, T_frames)
+    window = torch.hamming_window(WIN_LENGTH, device=stft_tensor.device)
+    return torch.istft(
+        stft_complex, n_fft=N_FFT, hop_length=HOP_LENGTH, win_length=WIN_LENGTH,
+        window=window, center=True, normalized=False, onesided=True,
+        return_complex=False, length=length,
+    )

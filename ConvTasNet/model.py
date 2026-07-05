@@ -1,3 +1,9 @@
+"""
+IC Conv-TasNet model for multichannel time-domain speech enhancement.
+
+Public interface:
+    TasNet — Conv1d encoder → dilated TCN → ConvTranspose1d decoder; supports ambidrop mode (9 SH channels, a00 reference) and baseline mode (M mic channels, per-sample reference)
+"""
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))

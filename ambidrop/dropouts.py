@@ -1,3 +1,12 @@
+"""
+SH-channel dropout layers used during AmbiDrop training to simulate ASM encoding errors.
+
+Public interface:
+    SHChannelDropout — randomly zero up to max_drop SH channels (STFT format, B×T×F×2C); never drops a00
+    SHChannelDropout1D — same policy for time-domain input (B×C×T), used by Conv-TasNet
+    PerChDropout — per-channel dropout with individually specified probabilities (STFT format)
+    PerChDropout1D — per-channel dropout for time-domain input (B×C×T)
+"""
 import torch
 import torch.nn as nn
 

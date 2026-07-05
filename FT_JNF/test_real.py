@@ -1,9 +1,16 @@
 """
-Real-world Aria glasses evaluation script.
+Evaluation script for FT-JNF on real-world Project Aria glasses recordings.
 
-Tests AmbiDrop or baseline FT-JNF on real-world recordings from Project Aria
-glasses, with on-the-fly ASM encoding, temporal alignment, and configurable
-ATF sources.
+Tests AmbiDrop or baseline FT-JNF on recordings from Project Aria glasses,
+with on-the-fly ASM encoding, temporal alignment, and configurable ATF sources.
+
+Public interface:
+    preprocess_single_example — load one ex_* folder, apply ASM, return STFT tensors
+    load_simulated_atf — load steering matrix V and grid angles from .mat files
+    load_measured_atf — load measured ATF from a SOFA file
+    select_clean_channel — select a target channel from a multichannel clean signal
+    align_with_best_shift — temporally align three signals using a precomputed lag
+    find_best_shift_correlation — find temporal alignment lag via cross-correlation
 
 Examples:
     # AmbiDrop with simulated ATF, compute cnm on-the-fly with Tikhonov
@@ -62,6 +69,7 @@ from FT_JNF.model import FT_JNF
 from ambidrop.losses import si_snr
 from ambidrop.checkpoint import load_checkpoint
 from ambidrop.constants import get_device, N_FFT, HOP_LENGTH, WIN_LENGTH
+from ambidrop.asm import encode_ambisonics, apply_asm_filters
 
 import matplotlib
 matplotlib.use("Agg")
@@ -100,133 +108,7 @@ def sh2(N, theta, phi):
     return Y
 
 
-def compute_spherical_harmonics_matrix(N, theta, phi):
-    """Compute SH matrix using scipy.special.sph_harm. Shape: ((N+1)^2, Q)."""
-    assert(phi.min() >= 0.0)
-    num_samples = phi.size
-    num_harmonics = (N + 1) ** 2
-    Y_matrix = np.zeros((num_harmonics, num_samples), dtype=complex)
-    index = 0
-    for n in range(N + 1):
-        for m in range(-n, n + 1):
-            Y_matrix[index, :] = sph_harm(m, n, phi, theta)
-            index += 1
-    return Y_matrix
-
-
-# ── ASM Solvers ──────────────────────────────────────────────────────────────
-
-def svd_inversion(A, b, snr_lin=1000):
-    """SVD-based inversion for ASM coefficient computation."""
-    lam = 1.0 / snr_lin
-    mat_to_inv = (A @ A.conj().T) + lam * np.eye(A.shape[0])
-    U, s, Vh = np.linalg.svd(mat_to_inv)
-    tol = 1.0 + A.shape[0] * np.finfo(float).eps * s[0]
-    s_inv = np.zeros_like(s)
-    mask = s > tol
-    s_inv[mask] = 1.0 / s[mask]
-    inv_mat = Vh.conj().T @ np.diag(s_inv) @ U.conj().T
-    return inv_mat @ A @ b
-
-
-def calculate_coefficients_tikhonov(V, N, th, ph):
-    """Compute ASM coefficients using Tikhonov regularization."""
-    from ASM.tikhonov import tikhonov
-    V = V.T
-    Y = compute_spherical_harmonics_matrix(N, th, ph)
-    cnm = np.zeros(((N+1)**2, V.shape[1], V.shape[2]), dtype=np.complex128)
-    for nm in range((N+1)**2):
-        for f in range(V.shape[1]):
-            cnm[nm, f] = tikhonov(A=V[:, f, :].conj(), b=Y[nm, :])
-    return cnm
-
-
-def calculate_coefficients_svd(V, N, th, ph, SNR_lin=1000):
-    """Compute ASM coefficients using SVD-based inversion (MATLAB-style)."""
-    V = np.asarray(V)
-    M, F, Q = V.shape
-    H = (N + 1) ** 2
-    Y = compute_spherical_harmonics_matrix(N, th, ph)
-    Y = np.asarray(Y)
-    if Y.shape == (H, Q):
-        Y = Y.T
-    lam = 1.0 / float(SNR_lin)
-    eps = np.finfo(np.float64).eps
-    cnm = np.zeros((H, F, M), dtype=np.complex128)
-    I_M = np.eye(M, dtype=np.complex128)
-    for nm in range(H):
-        Ynm = Y[:, nm]
-        for f in range(F):
-            v_k = V[:, f, :]
-            mat_to_inv = (v_k @ v_k.conj().T) + lam * I_M
-            maxdim = max(mat_to_inv.shape)
-            tol_inv = 1.0 + (maxdim * eps * np.linalg.norm(mat_to_inv))
-            U, s, Vh = np.linalg.svd(mat_to_inv, full_matrices=False)
-            s_inv = np.zeros_like(s)
-            keep = s > tol_inv
-            s_inv[keep] = 1.0 / s[keep]
-            inv_mat = (Vh.conj().T @ (s_inv[:, None] * U.conj().T))
-            cnm[nm, f, :] = inv_mat @ (v_k @ Ynm)
-    return cnm
-
-
-# ── Time-domain ASM encoding ────────────────────────────────────────────────
-
-def array_ambisonics_time_domain(p, c_ASM, filt_samp=512):
-    """
-    Convert microphone signals to Ambisonics via time-domain convolution.
-    p: (M, T), c_ASM: (harmonics, F, M)
-    """
-    T = p.shape[1]
-    N_mic = p.shape[0]
-    num_harmonics = c_ASM.shape[0]
-    anmt_array = np.zeros((num_harmonics, T), dtype=np.float32)
-    for j_idx in range(num_harmonics):
-        c_f = c_ASM[j_idx, :, :].T
-        c_time = np.fft.irfft(c_f, n=filt_samp, axis=1)
-        c_time_cs = np.roll(c_time, filt_samp // 2, axis=1)
-        first_col = c_time_cs[:, [0]]
-        tail_reversed = c_time_cs[:, :0:-1]
-        c_time_filter = np.concatenate([first_col, tail_reversed], axis=1)
-        tmp = np.zeros(T, dtype=np.float64)
-        for m in range(N_mic):
-            full_conv = np.convolve(p[m, :].astype(np.float64),
-                                    c_time_filter[m, :].astype(np.float64),
-                                    mode='full')
-            start_idx = filt_samp // 2
-            tmp += full_conv[start_idx : start_idx + T]
-        anmt_array[j_idx, :] = tmp
-    return anmt_array
-
-
-def array_ambisonics_time(p, V, th, ph, nfft, fs, N, regularization='tikhonov'):
-    """
-    Full ASM pipeline: compute coefficients and encode microphone signals.
-
-    Args:
-        regularization: 'tikhonov' or 'svd'
-    """
-    if regularization == 'tikhonov':
-        cnm = calculate_coefficients_tikhonov(V, N, th, ph)
-    elif regularization == 'svd':
-        cnm = calculate_coefficients_svd(V, N, th, ph)
-    else:
-        raise ValueError(f"Unknown regularization: {regularization}")
-    return array_ambisonics_time_domain(p, cnm, filt_samp=nfft)
-
-
 # ── Temporal alignment ───────────────────────────────────────────────────────
-
-def shifted_overlap(s1, s_hat, k):
-    """Shift s1 by k samples and return overlapping segments."""
-    T = min(len(s1), len(s_hat))
-    s1, s_hat = s1[:T], s_hat[:T]
-    if k > 0:
-        return s1[k:], s_hat[:-k]
-    elif k < 0:
-        k = -k
-        return s1[:-k], s_hat[k:]
-    return s1, s_hat
 
 
 def align_with_best_shift(s1, y, s_hat, best_shift):
@@ -290,13 +172,13 @@ def preprocess_single_example(folder_path, V, th, ph, nfft, fs,
     if cnm_source == 'compute':
         noisy_speech_mic = resample_poly(noisy_speech_mic, up=1, down=3, axis=1)
 
-        noisy_speech_anm = array_ambisonics_time(
-            noisy_speech_mic, V, th, ph, nfft, fs, N=2, regularization=regularization
+        noisy_speech_anm, _ = encode_ambisonics(
+            noisy_speech_mic, V, sh_order=2, th=th, ph=ph, method=regularization
         )
 
     elif cnm_source == 'precomputed':
         filt_len = asm_nfft if asm_nfft is not None else nfft
-        noisy_speech_anm = array_ambisonics_time_domain(noisy_speech_mic, precomputed_cnm, filt_samp=filt_len)
+        noisy_speech_anm = apply_asm_filters(noisy_speech_mic, precomputed_cnm, filt_samp=filt_len)
 
         noisy_speech_anm = resample_poly(noisy_speech_anm, up=1, down=3, axis=1)
         noisy_speech_mic = resample_poly(noisy_speech_mic, up=1, down=3, axis=1)
