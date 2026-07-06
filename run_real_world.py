@@ -41,6 +41,9 @@ from pesq import pesq
 from pystoi import stoi
 from tqdm import tqdm
 
+from shroom.encoders.asm import ASM
+from shroom.utils.file_utils import load_file
+
 from FT_JNF.model import FT_JNF
 from FT_JNF.constants import CHECKPOINT_REGISTRY
 from FT_JNF.test_real import (
@@ -164,6 +167,22 @@ def _run_eval(net, arch, V, th, ph, fs, args, device):
     cnm_source = "precomputed" if precomputed_cnm is not None else "compute"
     regularization = args.regularization
 
+    # Build shroom ASM encoder once when using measured ATF (compute path only).
+    # Encodes at 48 kHz; preprocess_single_example handles downsampling.
+    encode_fn = None
+    if args.atf == "measured" and cnm_source == "compute":
+        sofa_path = args.sofa_path or SOFA_PATH
+        print(f"[shroom] Building ASM encoder from {sofa_path}")
+        _array = load_file(sofa_path)
+        _array.toFreq()
+        _asm = ASM(sh_order=2, array=_array, fs=_array.fs)
+        _asm.calculate()
+        _offset = _asm.cnm.data.shape[-1] // 2
+        encode_fn = lambda mic: (
+            _asm.encode_amb(mic.T).data[0, :, _offset : _offset + mic.shape[1]].real.astype(np.float32)
+        )
+        print(f"[shroom] cnm: {_asm.cnm.data.shape}  (M, nm, F_full)\n")
+
     if args.scenarios:
         scenarios = args.scenarios
     else:
@@ -205,6 +224,7 @@ def _run_eval(net, arch, V, th, ph, fs, args, device):
                 folder_path=folder_path, V=V, th=th, ph=ph, nfft=n_fft, fs=fs,
                 regularization=regularization, cnm_source=cnm_source,
                 precomputed_cnm=precomputed_cnm, asm_nfft=asm_nfft, device=device,
+                encode_fn=encode_fn,
             )
 
             clean_signal = select_clean_channel(clean_time_mic, idx=ref_mic - 1)

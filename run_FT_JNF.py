@@ -68,6 +68,7 @@ from datagenerator.generate_baseline_train_ds import (
     ArraySpec,
 )
 from datagenerator.generate_inference_ds import generate_dataset as gen_test
+from datagenerator.paper_arrays import PAPER_ARRAYS_TRAIN, PAPER_ARRAYS_TEST
 
 
 # ============================================================
@@ -124,38 +125,44 @@ MAX_DROP  = 3
 # ARRAYS_TEST:  each array evaluated separately (can include unseen geometries).
 # Add more ArraySpec entries here to train/test on additional array types.
 
-N_MICS = 7
-SOURCE_GRID_POINTS = 480
+PAPER_ARRAYS = True # choose between paper arrays or custom arrays
 
-RIGID_SPHERE_MICS_GRID = sphereicalGrid(
-    az=np.linspace(0, 2 * np.pi, N_MICS, endpoint=False),
-    co=np.full(N_MICS, np.pi / 2),
-)
+if PAPER_ARRAYS:
+    ARRAYS_TRAIN = PAPER_ARRAYS_TRAIN
+    ARRAYS_TEST  = PAPER_ARRAYS_TEST
+else:
+    N_MICS = 7
 
-ARRAYS_TRAIN = [
-    ArraySpec(
-        name="rigid_sphere_r0.1_7mic",
-        array_type="rigid_sphere",
-        rigid_sphere=RigidSphereArrayConfig(
-            mics_grid=RIGID_SPHERE_MICS_GRID, mic_radius=0.1
+    RIGID_SPHERE_MICS_GRID = sphereicalGrid(
+        az=np.linspace(0, 2 * np.pi, N_MICS, endpoint=False),
+        co=np.full(N_MICS, np.pi / 2),
+    )
+
+    ARRAYS_TRAIN = [
+        ArraySpec(
+            name="rigid_sphere_r0.1_7mic",
+            array_type="rigid_sphere",
+            rigid_sphere=RigidSphereArrayConfig(
+                mics_grid=RIGID_SPHERE_MICS_GRID, mic_radius=0.1
+            ),
         ),
-    ),
-    # Add more training arrays here, e.g.:
-    # ArraySpec(name="free_field_7mic", array_type="free_field",
-    #           free_field=FreeFieldArrayConfig(mic_positions=...)),
-]
+        # Add more training arrays here, e.g.:
+        # ArraySpec(name="free_field_7mic", array_type="free_field",
+        #           free_field=FreeFieldArrayConfig(mic_positions=...)),
+    ]
 
-ARRAYS_TEST = [
-    ArraySpec(
-        name="rigid_sphere_r0.1_7mic",
-        array_type="rigid_sphere",
-        rigid_sphere=RigidSphereArrayConfig(
-            mics_grid=RIGID_SPHERE_MICS_GRID, mic_radius=0.1
+    ARRAYS_TEST = [
+        ArraySpec(
+            name="rigid_sphere_r0.1_7mic",
+            array_type="rigid_sphere",
+            rigid_sphere=RigidSphereArrayConfig(
+                mics_grid=RIGID_SPHERE_MICS_GRID, mic_radius=0.1
+            ),
         ),
-    ),
-    # To test generalisation to a new (unseen) array, add it here without
-    # adding it to ARRAYS_TRAIN. AmbiDrop should still generalise.
-]
+        # To test generalisation to a new (unseen) array, add it here without
+        # adding it to ARRAYS_TRAIN. AmbiDrop should still generalise.
+    ]
+
 
 # ============================================================
 # === END USER CONFIG ========================================

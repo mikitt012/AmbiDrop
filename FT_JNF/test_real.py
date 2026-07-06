@@ -152,10 +152,16 @@ def select_clean_channel(clean_time_mic, idx=0):
 
 def preprocess_single_example(folder_path, V, th, ph, nfft, fs,
                                regularization='tikhonov', cnm_source='compute',
-                               precomputed_cnm=None, asm_nfft=None, device="cpu"):
+                               precomputed_cnm=None, asm_nfft=None, device="cpu",
+                               encode_fn=None):
     """
     Process one real-world example folder.
     Expected files: p.wav, s.wav, best_shift.txt
+
+    encode_fn : callable (M, T_48k) -> (nm, T_48k), optional
+        When provided, used instead of encode_ambisonics for the 'compute' path.
+        Intended for measured ATF via shroom's ASM class (encodes at 48 kHz, the
+        caller is responsible for resampling). V/th/ph are unused in this case.
     """
     array_file = os.path.join(folder_path, "p.wav")
     direct_file = os.path.join(folder_path, "s.wav")
@@ -170,11 +176,17 @@ def preprocess_single_example(folder_path, V, th, ph, nfft, fs,
     clean_speech_mic = clean_speech_mic.T  # already 16kHz
 
     if cnm_source == 'compute':
-        noisy_speech_mic = resample_poly(noisy_speech_mic, up=1, down=3, axis=1)
-
-        noisy_speech_anm, _ = encode_ambisonics(
-            noisy_speech_mic, V, sh_order=2, th=th, ph=ph, method=regularization
-        )
+        if encode_fn is not None:
+            # measured ATF via shroom: encode at 48 kHz, then downsample
+            noisy_speech_anm = encode_fn(noisy_speech_mic)                          # (nm, T_48k)
+            noisy_speech_anm = resample_poly(noisy_speech_anm, up=1, down=3, axis=1)
+            noisy_speech_mic = resample_poly(noisy_speech_mic, up=1, down=3, axis=1)
+        else:
+            # simulated ATF: downsample first, then encode at 16 kHz with Tikhonov/SVD
+            noisy_speech_mic = resample_poly(noisy_speech_mic, up=1, down=3, axis=1)
+            noisy_speech_anm, _ = encode_ambisonics(
+                noisy_speech_mic, V, sh_order=2, th=th, ph=ph, method=regularization
+            )
 
     elif cnm_source == 'precomputed':
         filt_len = asm_nfft if asm_nfft is not None else nfft

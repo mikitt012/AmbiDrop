@@ -79,7 +79,6 @@ def compute_asm_coefficients(
     """
     H = (sh_order + 1) ** 2
     Y = _compute_sh_matrix(sh_order, np.asarray(th), np.asarray(ph))  # (H, Q)
-
     if sh_type == "real":
         Y = complex_acn_to_real_acn(Y, sh_order, sn3d=False)          # (H, Q) real
     elif sh_type != "complex":

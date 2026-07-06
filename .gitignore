@@ -3,17 +3,21 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Model checkpoints
-checkpoints/
-ConvTasNet/checkpoints/
-
 # Datasets
 datasets/
+Aria16Khz/
 si_dt_05_preprocessed_full/
 si_tr_s_preprocessed_full/
 
 # Old code
 _old/
+
+# Private / IDE config
+.claude/
+docs/
+
+# One-off scripts
+smoke_test.py
 
 # Results / outputs
 snr_distribution_fixed/
@@ -30,6 +34,3 @@ wandb/
 
 # TensorBoard
 runs/
-
-# Environment
-environment.yml
