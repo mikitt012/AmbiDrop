@@ -1,0 +1,12 @@
+# All checkpoint files below are local-only.
+# The 4 main checkpoints are tracked via Git LFS — gitignore does not affect already-tracked files.
+
+FT_JNF/SH_FT_JNF,2025-12-0*.pt
+FT_JNF/SH_FT_JNF,2025-12-2*.pt
+FT_JNF/SH_FT_JNF,2026-*.pt
+FT_JNF/FT_JNF,2025-*.pt
+FT_JNF/FT_JNF,2026-06*.pt
+FT_JNF/AmbiDrop*.pt
+FT_JNF/baseline_experiment2.pt
+FT_JNF/checkpoint_size_*.pt
+ConvTasNet/run_2026-04-07_15-27/
