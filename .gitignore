@@ -15,6 +15,7 @@ _old/
 # Private / IDE config
 .claude/
 docs/
+DOCS.md
 
 # One-off scripts
 smoke_test.py

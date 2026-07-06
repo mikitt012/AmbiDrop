@@ -1,6 +1,6 @@
 # AmbiDrop: Array-Agnostic Speech Enhancement via Ambisonics Training
 
-_Last updated: 2026-07-06_
+_Last updated: 2026-07-07_
 
 Standard DNN speech enhancers are trained and tested on the same microphone array, so they fail when deployed on an unseen geometry. AmbiDrop breaks this coupling by training the DNN exclusively on **ideal Ambisonics** — an array-free spherical harmonic (SH) representation — rather than on microphone signals.
 
@@ -36,7 +36,7 @@ python run_FT_JNF.py --mode ambidrop --actions generate preprocess train test
 python run_FT_JNF.py --mode both --actions generate preprocess train test
 
 # 4. Evaluate on real Project Aria glasses recordings (requires datasets/aria_ds/)
-python run_real_world.py --atf simulated
+python run_Real_World.py --atf simulated
 
 # 5. IC Conv-TasNet — identical structure
 python run_ConvTasNet.py --mode ambidrop --actions generate preprocess train test
@@ -57,12 +57,20 @@ For benchmark numbers see the paper.
 
 ## Setup
 
+**Conda (recommended):**
+
 ```bash
 conda env create -f environment.yml
 conda activate venv
 ```
 
-The `shroom` library (rigid sphere / array ATF simulation) is included in `environment.yml` and installed automatically from GitHub. To install it manually:
+**pip alternative (Python 3.9):**
+
+```bash
+pip install -r requirements.txt
+```
+
+The `shroom` library (rigid sphere / array ATF simulation) is pulled from GitHub automatically by both methods. To install it manually:
 
 ```bash
 pip install git+https://github.com/Yhonatangayer/shroom.git
@@ -146,7 +154,7 @@ python run_ConvTasNet.py --mode ambidrop --actions generate preprocess train tes
 
 ---
 
-### `run_real_world.py` — Real-world Aria evaluation
+### `run_Real_World.py` — Real-world Aria evaluation
 
 Evaluates FT-JNF on real Project Aria glasses recordings. Architecture is resolved automatically from the checkpoint filename via `CHECKPOINT_REGISTRY`. Three ASM encoding paths are supported:
 
@@ -174,13 +182,13 @@ Evaluates FT-JNF on real Project Aria glasses recordings. Architecture is resolv
 
 ```bash
 # Simulated ATF — Tikhonov at 16 kHz (default)
-python run_real_world.py --atf simulated
+python run_Real_World.py --atf simulated
 
 # Measured ATF — shroom ASM class at 48 kHz
-python run_real_world.py --atf measured
+python run_Real_World.py --atf measured
 
 # Precomputed cnm — skip coefficient computation
-python run_real_world.py --cnm-path datasets/aria_ds/cnm_shroom.npy
+python run_Real_World.py --cnm-path datasets/aria_ds/cnm_shroom.npy
 ```
 
 To generate `cnm_shroom.npy` from the measured ATF:
@@ -221,8 +229,7 @@ Type C is the key evaluation format: it tests whether ASM-encoded signals from a
 
 | Paper element | Code |
 |---|---|
-| SH signal model (Eq. 3) | `ambidrop/asm.py` — `compute_asm_coefficients` |
-| ASM Tikhonov filter (Eq. 6–7) | `ambidrop/asm.py` — `tikhonov`, `encode_ambisonics` |
+| SH signal model (Section II-B) | `ambidrop/asm.py` — `compute_asm_coefficients`, `encode_ambisonics` |
 | Channel dropout mechanism (Section III-C) | `ambidrop/dropouts.py` — `SHChannelDropout` |
 | FT-JNF architecture (Section IV-A) | `FT_JNF/model.py` |
 | IC Conv-TasNet architecture (Section IV-B) | `ConvTasNet/model.py`, `ConvTasNet/modules.py` |
@@ -234,8 +241,8 @@ Type C is the key evaluation format: it tests whether ASM-encoded signals from a
 | AmbiDrop training | `FT_JNF/train.py` — `training_step_ambidrop`, `run_FT_JNF.py --mode ambidrop` |
 | Baseline training | `FT_JNF/train.py` — `training_step_baseline`, `run_FT_JNF.py --mode baseline` |
 | Simulated test set results (Table I) | `FT_JNF/test_simulated.py`, `FT_JNF/ablations/main_results.py` |
-| Real-world Aria results (Table II) | `FT_JNF/test_real.py`, `FT_JNF/ablations/main_results_real.py`, `run_real_world.py` |
-| Conv-TasNet results (Table III) | `ConvTasNet/main_results.py`, `run_ConvTasNet.py` |
+| Real-world Aria results (Table II) | `FT_JNF/test_real.py`, `FT_JNF/ablations/main_results_real.py`, `run_Real_World.py` |
+| Conv-TasNet results (Table I) | `ConvTasNet/main_results.py`, `run_ConvTasNet.py` |
 | Training / test array geometries (Fig. 2–3) | `ARRAYS_TRAIN`, `ARRAYS_TEST` in `run_FT_JNF.py` USER CONFIG; predefined in `datagenerator/paper_arrays.py` |
 
 ### Ablation studies
@@ -301,10 +308,11 @@ AmbiDrop/
 ├── assets/               — figures for this README
 ├── run_FT_JNF.py         — FT-JNF end-to-end wrapper (USER CONFIG here)
 ├── run_ConvTasNet.py     — Conv-TasNet end-to-end wrapper (USER CONFIG here)
-├── run_real_world.py     — Real Aria evaluation wrapper
+├── run_Real_World.py     — Real Aria evaluation wrapper
 ├── CODEBASE_OVERVIEW.md  — internal architecture reference (keep up to date)
 ├── USAGE.md              — full CLI and API reference
-└── environment.yml       — Conda environment
+├── environment.yml       — Conda environment
+└── requirements.txt      — pip requirements (alternative to conda)
 ```
 
 ---
@@ -316,16 +324,46 @@ AmbiDrop/
 | `README.md` | Project overview, quick start, wrapper script reference |
 | `CODEBASE_OVERVIEW.md` | Neural network internals, data pipeline, checkpoints, ASM formula |
 | `USAGE.md` | Complete CLI flags for every script, preprocessing API, ASM API |
-| `DOCS.md` | Index of all documentation files |
 
 ---
 
-## Citation
+## Paper and Citation
+
+If you use this code in your research, please cite our paper:
+
+**AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement**
+Michael Tatarjitzky, Vladimir Tourbabin, Boaz Rafaely
+
+Paper: [https://arxiv.org/abs/2607.00548](https://arxiv.org/abs/2607.00548)
 
 ```bibtex
-@inproceedings{ambidrop2026,
-  title   = {AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement},
-  author  = {Tatarjitzky, M. and Tourbabin, V. and Rafaely, B.},
-  year    = {2026},
+@misc{tatarjitzky2026ambidropambisonicsbasedarrayagnosticneural,
+      title={AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement},
+      author={Michael Tatarjitzky and Vladimir Tourbabin and Boaz Rafaely},
+      year={2026},
+      eprint={2607.00548},
+      archivePrefix={arXiv},
+      primaryClass={eess.AS},
+      url={https://arxiv.org/abs/2607.00548},
+}
+```
+
+---
+
+## References
+
+Libraries and tools used in this project that are not cited in the paper:
+
+**SHroom** — Python framework for Ambisonics room acoustics simulation and binaural rendering, used for array ATF generation throughout the data pipeline.
+
+```bibtex
+@misc{gayer2026shroompythonframeworkambisonics,
+      title={SHroom: A Python Framework for Ambisonics Room Acoustics Simulation and Binaural Rendering},
+      author={Yhonatan Gayer},
+      year={2026},
+      eprint={2603.27342},
+      archivePrefix={arXiv},
+      primaryClass={eess.AS},
+      url={https://arxiv.org/abs/2603.27342},
 }
 ```

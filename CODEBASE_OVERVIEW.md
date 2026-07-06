@@ -188,7 +188,7 @@ encoded_anm = apply_asm_filters(mic_signals, cnm)
 AmbiDrop/
 ├── run_FT_JNF.py         — end-to-end wrapper: generate / preprocess / train / test (FT-JNF)
 ├── run_ConvTasNet.py     — end-to-end wrapper: same four phases for Conv-TasNet
-├── run_real_world.py     — wrapper: evaluate FT-JNF on real Aria glasses recordings
+├── run_Real_World.py     — wrapper: evaluate FT-JNF on real Aria glasses recordings
 │
 ├── ambidrop/             — core library
 │   ├── __init__.py       — public re-exports

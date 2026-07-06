@@ -1,0 +1,71 @@
+# AmbiDrop — pip requirements
+#
+# Recommended install (preserves exact conda environment):
+#   conda env create -f environment.yml
+#   conda activate venv
+#
+# Alternative (pip only, Python 3.9):
+#   pip install -r requirements.txt
+#
+# Note: the shroom library is installed from GitHub (last line).
+# CUDA packages (nvidia-*) are included for GPU support; omit them for CPU-only installs.
+
+torch==2.7.0
+torchaudio==2.7.0
+torchvision==0.22.0
+
+numpy==2.0.2
+scipy==1.13.1
+librosa==0.11.0
+soundfile==0.13.1
+sounddevice==0.5.1
+pydub==0.25.1
+audioread==3.1.0
+soxr==1.0.0
+
+pyroomacoustics==0.8.3
+netcdf4==1.7.2
+sofar==1.2.3
+h5py==3.13.0
+
+pesq==0.0.4
+pystoi==0.4.1
+
+matplotlib==3.9.4
+pandas==2.3.3
+scikit-learn==1.6.1
+joblib==1.5.3
+tqdm==4.67.1
+numba==0.60.0
+llvmlite==0.43.0
+
+wandb==0.19.11
+tensorboard==2.19.0
+tensorboard-data-server==0.7.2
+
+pyyaml==6.0.2
+requests==2.32.3
+sympy==1.14.0
+networkx==3.2.1
+filelock==3.18.0
+fsspec==2025.3.2
+pillow==11.2.1
+pooch==1.9.0
+
+# GPU support (CUDA 12) — remove if running CPU-only
+nvidia-cublas-cu12==12.6.4.1
+nvidia-cuda-cupti-cu12==12.6.80
+nvidia-cuda-nvrtc-cu12==12.6.77
+nvidia-cuda-runtime-cu12==12.6.77
+nvidia-cudnn-cu12==9.5.1.17
+nvidia-cufft-cu12==11.3.0.4
+nvidia-curand-cu12==10.3.7.77
+nvidia-cusolver-cu12==11.7.1.2
+nvidia-cusparse-cu12==12.5.4.2
+nvidia-nccl-cu12==2.26.2
+nvidia-nvjitlink-cu12==12.6.85
+nvidia-nvtx-cu12==12.6.77
+triton==3.3.0
+
+# Ambisonics room acoustics simulation (required)
+git+https://github.com/Yhonatangayer/shroom.git

@@ -12,7 +12,7 @@ Complete reference for every script, function, and CLI flag in the project. For 
 2. [Wrapper Scripts](#2-wrapper-scripts)
    - [run_FT_JNF.py](#run_ft_jnfpy)
    - [run_ConvTasNet.py](#run_convtasnetpy)
-   - [run_real_world.py](#run_real_worldpy)
+   - [run_Real_World.py](#run_real_worldpy)
 3. [Data Generation](#3-data-generation)
    - [generate_ambidrop_train_ds.py — Type A](#generate_ambidrop_train_dspy--type-a)
    - [generate_baseline_train_ds.py — Type B](#generate_baseline_train_dspy--type-b)
@@ -31,12 +31,20 @@ Complete reference for every script, function, and CLI flag in the project. For 
 
 ## 1. Setup
 
+**Conda (recommended):**
+
 ```bash
 conda env create -f environment.yml
 conda activate venv
 ```
 
-The `shroom` library (rigid-sphere / ATF simulation) is pulled from GitHub automatically. To install it manually:
+**pip alternative (Python 3.9):**
+
+```bash
+pip install -r requirements.txt
+```
+
+The `shroom` library (rigid-sphere / ATF simulation) is pulled from GitHub automatically by both methods. To install it manually:
 
 ```bash
 pip install git+https://github.com/Yhonatangayer/shroom.git
@@ -118,7 +126,7 @@ python run_ConvTasNet.py --mode ambidrop --actions test
 
 ---
 
-### `run_real_world.py`
+### `run_Real_World.py`
 
 Evaluates an FT-JNF checkpoint on real Project Aria glasses recordings. The model architecture is resolved automatically from the checkpoint filename via `CHECKPOINT_REGISTRY`.
 
@@ -150,16 +158,16 @@ Evaluates an FT-JNF checkpoint on real Project Aria glasses recordings. The mode
 
 ```bash
 # Default: simulated ATF
-python run_real_world.py
+python run_Real_World.py
 
 # Measured ATF (requires SOFA file)
-python run_real_world.py --atf measured
+python run_Real_World.py --atf measured
 
 # Precomputed cnm
-python run_real_world.py --cnm-path datasets/aria_ds/cnm_shroom.npy
+python run_Real_World.py --cnm-path datasets/aria_ds/cnm_shroom.npy
 
 # Specific scenarios, save results
-python run_real_world.py --scenarios scenario_1 scenario_2 --output-csv results.csv
+python run_Real_World.py --scenarios scenario_1 scenario_2 --output-csv results.csv
 ```
 
 **Generating `cnm_shroom.npy` from the measured ATF:**
@@ -761,7 +769,7 @@ CHECKPOINT_REGISTRY = {
 
 1. Train the model and note the checkpoint filename.
 2. Add an entry to `CHECKPOINT_REGISTRY` with the correct `mode`, `input_dim`, `hidden1`, `hidden2`, and (if applicable) `dropout`, `drop_prob`, `max_drop`.
-3. The evaluation scripts and `run_real_world.py` will pick it up automatically.
+3. The evaluation scripts and `run_Real_World.py` will pick it up automatically.
 
 **Preferred checkpoints for paper experiments:**
 
