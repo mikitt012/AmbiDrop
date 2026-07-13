@@ -53,7 +53,7 @@ from FT_JNF.datasets import SimDS_preprocessed
 from ambidrop.checkpoint import load_checkpoint
 from ambidrop.signal_utils import zero_random_channels
 from ambidrop.constants import (
-    REF_IDX_MAP, N_FFT, HOP_LENGTH, WIN_LENGTH, get_device
+    REF_IDX_MAP, get_ref_idx, N_FFT, HOP_LENGTH, WIN_LENGTH, get_device
 )
 
 
@@ -90,13 +90,22 @@ def parse_args():
     return p.parse_args()
 
 
-def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0):
-    """Evaluate a model on one array type. Returns dict of metric arrays."""
+def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0,
+                   ref_id=None, array_name=None):
+    """Evaluate a model on one array type. Returns dict of metric arrays.
+
+    ref_id: 0-based reference mic index. When provided, takes priority over
+    REF_IDX_MAP (use this for freshly generated arrays or when test_type is a
+    subdirectory name like 'baseline_test' rather than an array name).
+    array_name: used for REF_IDX_MAP lookup when ref_id is not provided.
+    Falls back to test_type for legacy callers that pass the array name there.
+    """
     test_ds = SimDS_preprocessed(data_dir, test_type)
     testloader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
     num_ch = None
-    ref_id = REF_IDX_MAP.get(test_type, 1) - 1
+    if ref_id is None:
+        ref_id = get_ref_idx(array_name or test_type) - 1
 
     metrics = {
         'si_sdr_noisy': [], 'si_sdr_enhanced': [],
@@ -238,7 +247,8 @@ def main():
     else:
         test_types = sorted([
             d for d in os.listdir(args.data_dir)
-            if os.path.isdir(os.path.join(args.data_dir, d)) and d in REF_IDX_MAP
+            if os.path.isdir(os.path.join(args.data_dir, d))
+            and d.removesuffix("_preprocessed") in REF_IDX_MAP
         ])
 
     if not test_types:

@@ -1,6 +1,6 @@
 # AmbiDrop — Usage Reference
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-13_
 
 Complete reference for every script, function, and CLI flag in the project. For architecture internals and codebase structure, see `CODEBASE_OVERVIEW.md`. For a project overview, see `README.md`.
 
@@ -52,6 +52,17 @@ pip install git+https://github.com/Yhonatangayer/shroom.git
 
 **WSJ0 requirement.** Data generation scripts require the WSJ0 corpus. Set the path in the `# === USER CONFIG ===` block at the top of the wrapper script you're running, or pass it via `--speech-dir` directly to the generator scripts.
 
+**Reference mic index.** Most preprocessing and test functions require a 0-based reference mic index (the mic closest to the target speaker at azimuth 0). Use `get_ref_idx` from `ambidrop/constants.py` to look it up by array name:
+
+```python
+from ambidrop.constants import REF_IDX_MAP, get_ref_idx
+
+ref_1based = get_ref_idx("uniform sphere (rigid) radius = 0.1")  # → 2
+ref_0based  = ref_1based - 1
+```
+
+`get_ref_idx(name)` strips the `_preprocessed` suffix automatically, so it works with both bare array names and on-disk directory names. For arrays not in `REF_IDX_MAP`, use `find_ref_mic` from `ambidrop/signal_utils.py` which selects the mic closest to azimuth 0 given mic positions.
+
 ---
 
 ## 2. Wrapper Scripts
@@ -80,11 +91,25 @@ ARRAYS_TEST  = [...]   # list of ArraySpec — use PAPER_ARRAYS_TEST to reproduc
 |------|---------|-------------|
 | `--mode {ambidrop,baseline,both}` | required | Training and evaluation mode |
 | `--actions ACTION [ACTION ...]` | required | One or more of: `generate`, `preprocess`, `train`, `test` |
-| `--checkpoint PATH` | auto from registry | Override checkpoint for `test` (single-mode only) |
-| `--checkpoint-baseline PATH` | — | Override baseline checkpoint when `--mode both` |
-| `--checkpoint-ambidrop PATH` | — | Override ambidrop checkpoint when `--mode both` |
-| `--test-raw-dir PATH` | — | Use a different raw directory for the test phase |
+| `--checkpoint PATH` | auto | Override checkpoint for `test` (single-mode only) |
+| `--checkpoint-baseline PATH` | — | Baseline checkpoint when `--mode both` |
+| `--checkpoint-ambidrop PATH` | — | AmbiDrop checkpoint when `--mode both` |
+| `--test-arrays {test,train,both}` | `both` | Which array geometries to generate/evaluate at test time |
+| `--test-raw-dir-test PATH` | auto | Raw Type-C data directory for test arrays |
+| `--test-raw-dir-train PATH` | — | Raw Type-C data directory for train arrays; enables train-array evaluation |
 | `--legacy-eval-dir PATH` | — | Evaluate on a pre-existing preprocessed directory (skips generate/preprocess) |
+| `--raw-baseline-train PATH` | auto | Existing raw baseline training directory (skips generate for this split) |
+| `--raw-baseline-val PATH` | auto | Existing raw baseline validation directory |
+| `--raw-ambidrop-train PATH` | auto | Existing raw AmbiDrop training directory (skips generate for this split) |
+| `--raw-ambidrop-val PATH` | auto | Existing raw AmbiDrop validation directory |
+| `--prep-baseline-train PATH` | — | Already-preprocessed baseline training directory (skips preprocess) |
+| `--prep-baseline-val PATH` | — | Already-preprocessed baseline validation directory |
+| `--prep-ambidrop-train PATH` | — | Already-preprocessed AmbiDrop training directory (skips preprocess) |
+| `--prep-ambidrop-val PATH` | — | Already-preprocessed AmbiDrop validation directory |
+| `--wandb-project STR` | `FT_JNF` | W&B project name |
+| `--wandb-entity STR` | — | W&B entity / team |
+| `--wandb-run-name STR` | — | Prefix for W&B run names |
+| `--no-wandb` | False | Disable W&B logging entirely |
 
 **Examples**
 
@@ -104,17 +129,57 @@ python run_FT_JNF.py --mode ambidrop --actions preprocess train test
 # Evaluate a specific checkpoint on fresh data
 python run_FT_JNF.py --mode ambidrop --actions generate preprocess test \
     --checkpoint checkpoints/FT_JNF/SH_FT_JNF,2025-12-01_10-08-18.pt
+
+# Evaluate on both test AND train arrays
+python run_FT_JNF.py --mode both --actions generate preprocess test --test-arrays both
+
+# Reuse existing raw data from a different location
+python run_FT_JNF.py --mode both --actions preprocess train \
+    --raw-ambidrop-train datasets/my_run/raw/ambidrop_train \
+    --raw-ambidrop-val   datasets/my_run/raw/ambidrop_val \
+    --raw-baseline-train datasets/my_run/raw/baseline_train \
+    --raw-baseline-val   datasets/my_run/raw/baseline_val
+
+# Train directly from already-preprocessed .pt files
+python run_FT_JNF.py --mode ambidrop --actions train \
+    --prep-ambidrop-train /path/to/preprocessed/train \
+    --prep-ambidrop-val   /path/to/preprocessed/val
 ```
 
 ---
 
 ### `run_ConvTasNet.py`
 
-End-to-end pipeline for IC Conv-TasNet. Identical `--mode` and `--actions` structure to `run_FT_JNF.py`.
+End-to-end pipeline for IC Conv-TasNet. Same `--mode` and `--actions` structure as `run_FT_JNF.py` with the following differences:
 
-**Key difference:** Preprocessing produces time-domain real ACN tensors (not STFT), because Conv-TasNet operates on waveforms.
+- **No W&B flags** — `--wandb-*` and `--no-wandb` are not available
+- **No `--legacy-eval-dir`** — legacy directory evaluation is not supported
+- **`--test-arrays` defaults to `test`** (not `both` as in `run_FT_JNF.py`)
+- **Preprocessing is time-domain**, not STFT: Conv-TasNet operates on raw waveforms
+- **AmbiDrop test preprocessing encodes ASM on-the-fly** from `p.wav` via `ConvTasNet/preprocess.py` rather than reading pre-stored `anmt_array` from `anm.mat`
 
 **Edit the USER CONFIG block at the top of the file before running** (same fields as `run_FT_JNF.py`).
+
+**Flags**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--mode {ambidrop,baseline,both}` | required | Training and evaluation mode |
+| `--actions ACTION [ACTION ...]` | required | One or more of: `generate`, `preprocess`, `train`, `test` |
+| `--checkpoint PATH` | auto | Override checkpoint for `test` (single-mode only) |
+| `--checkpoint-baseline PATH` | — | Baseline checkpoint when `--mode both` |
+| `--checkpoint-ambidrop PATH` | — | AmbiDrop checkpoint when `--mode both` |
+| `--test-arrays {test,train,both}` | `test` | Which array geometries to evaluate at test time |
+| `--test-raw-dir-test PATH` | auto | Raw Type-C data directory for test arrays |
+| `--test-raw-dir-train PATH` | — | Raw Type-C data directory for train arrays; enables train-array evaluation |
+| `--raw-baseline-train PATH` | auto | Existing raw baseline training directory |
+| `--raw-baseline-val PATH` | auto | Existing raw baseline validation directory |
+| `--raw-ambidrop-train PATH` | auto | Existing raw AmbiDrop training directory |
+| `--raw-ambidrop-val PATH` | auto | Existing raw AmbiDrop validation directory |
+| `--prep-baseline-train PATH` | — | Already-preprocessed baseline training directory (skips preprocess) |
+| `--prep-baseline-val PATH` | — | Already-preprocessed baseline validation directory |
+| `--prep-ambidrop-train PATH` | — | Already-preprocessed AmbiDrop training directory (skips preprocess) |
+| `--prep-ambidrop-val PATH` | — | Already-preprocessed AmbiDrop validation directory |
 
 ```bash
 # Full pipeline
@@ -122,6 +187,14 @@ python run_ConvTasNet.py --mode ambidrop --actions generate preprocess train tes
 
 # Evaluate pre-existing checkpoints
 python run_ConvTasNet.py --mode ambidrop --actions test
+
+# Evaluate on both test AND train arrays
+python run_ConvTasNet.py --mode both --actions generate preprocess test --test-arrays both
+
+# Reuse existing raw data
+python run_ConvTasNet.py --mode both --actions preprocess train \
+    --raw-ambidrop-train datasets/my_run/raw/ambidrop_train \
+    --raw-ambidrop-val   datasets/my_run/raw/ambidrop_val
 ```
 
 ---
@@ -330,6 +403,21 @@ preprocess_dataset_multi(array_dirs, out_dir, preprocess_fn, train=True, **fn_kw
 |----------|----------|--------|
 | Type A / B training or validation (multiple arrays) | `preprocess_dataset_multi` | You want one merged dataset so the model trains across all arrays simultaneously |
 | Type C inference / test (multiple arrays) | `preprocess_dataset` — once per array | You want each array's results to stay separate so you can compare per-array performance |
+
+---
+
+### `ConvTasNet/preprocess.py` — Time-domain preprocessing (Conv-TasNet only)
+
+These two functions produce time-domain `.pt` dicts (no STFT) for the IC Conv-TasNet pipeline. Both are compatible with `preprocess_dataset` / `preprocess_dataset_multi`.
+
+| Function | Input | Output (`format` key) | Used by |
+|----------|-------|-----------------------|---------|
+| `preprocess_mic_time(ex_dir, ref_id, ...)` | Type B raw dir | `noisy (M,T)`, `clean (M,T)`, `ref_id` — `format='time'` | Conv-TasNet baseline train/test |
+| `preprocess_ambisonics_time(ex_dir, V, th, ph, ...)` | Type C raw dir + steering matrix | `noisy_mic (M,T)`, `clean_mic (M,T)`, `anmt (9,T)`, `clean_anm (T,)` — `format='ambidrop_test'` | Conv-TasNet AmbiDrop test |
+
+`preprocess_ambisonics_time` encodes Ambisonics on-the-fly from raw `p.wav` via ASM (no pre-stored `anmt_array` needed). It corrects the group delay introduced by the array IR + ASM filters using `estimate_delay` / `align_to_lag` from `datagenerator/helpers.py`. The steering matrix `V` (shape `M × F_pos × Q`) is built by `_build_steering_matrix` in `run_ConvTasNet.py`.
+
+`SimDS_preprocessed` in `ConvTasNet/datasets.py` dispatches on the `format` key: `'time'` returns a 5-tuple (noisy, clean, ref_id, array_name, ex_id), `'ambidrop_test'` returns a 4-tuple (noisy_mic, clean_mic, anmt, clean_anm, ref_id), and the absence of a dict (raw 2-tuple) is used for AmbiDrop training data from `preprocess_sh_time`.
 
 **Example — preprocess a Type A training set from multiple arrays (merged):**
 

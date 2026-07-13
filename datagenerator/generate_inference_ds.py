@@ -350,6 +350,9 @@ def generate_example(cnm, array_decoder, scene, speeches, save_dir):
     # pDirect.wav (direct-only target mic), anm.mat with
     # anmt/anmt_array/anmtDirect.
     os.makedirs(save_dir, exist_ok=True)
+    mic_scale = np.max(np.abs(mic_noisy_aligned)) + 1e-8  # global max over all channels
+    mic_noisy_aligned  = mic_noisy_aligned  / mic_scale
+    mic_direct_aligned = mic_direct_aligned / mic_scale
     sf.write(os.path.join(save_dir, "p.wav"), mic_noisy_aligned.T.real, FS)
     sf.write(os.path.join(save_dir, "pDirect.wav"), mic_direct_aligned.T.real, FS)
     scipy.io.savemat(os.path.join(save_dir, "anm.mat"), {

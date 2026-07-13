@@ -1,6 +1,6 @@
 # AmbiDrop — Codebase Overview
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-13_
 
 > **Living document.** Update this file whenever the codebase changes (new modules, renamed files, new checkpoints, changed APIs).
 
@@ -62,15 +62,25 @@ All three types share the same scene randomisation: room dimensions (2.5–5 × 
 The 21 microphone array geometries used in the paper are predefined in `datagenerator/paper_arrays.py` as `PAPER_ARRAYS_TRAIN` (10 arrays), `PAPER_ARRAYS_TEST` (11 arrays), and `PAPER_ARRAYS_ALL` (21 combined).
 
 ### Preprocessing Functions
-**File:** `ambidrop/preprocess.py`
+
+**File:** `ambidrop/preprocess.py` — FT-JNF and Conv-TasNet AmbiDrop training
 
 | Function | Input | Output shape | Used by |
 |----------|-------|-------------|---------|
 | `preprocess_mic(ex_dir, ref_id, train)` | Type B raw dir | `(T, 257, 14)` noisy STFT + `(T_s,)` clean mic | FT-JNF baseline |
 | `preprocess_sh_stft(ex_dir, anm_source, train)` | Type A (`"ideal"`) or C (`"asm"`) | `(T, 257, 18)` noisy SH STFT + `(T_s,)` clean a₀₀ | FT-JNF AmbiDrop |
-| `preprocess_sh_time(ex_dir, train)` | Type A raw dir | `(9, T_s)` real ACN + `(T_s,)` direct a₀₀ | Conv-TasNet AmbiDrop |
+| `preprocess_sh_time(ex_dir, train)` | Type A raw dir | `(9, T_s)` real ACN + `(T_s,)` direct a₀₀ | Conv-TasNet AmbiDrop training |
 
 All functions extract a 6 s (train) or 7.5 s (test) window anchored to speech onset, normalise by peak amplitude, and save as `.pt` files.
+
+**File:** `ConvTasNet/preprocess.py` — Conv-TasNet time-domain preprocessing
+
+| Function | Input | Output (`.pt` dict) | Used by |
+|----------|-------|---------------------|---------|
+| `preprocess_mic_time(ex_dir, ref_id, train)` | Type B raw dir | `noisy (M,T)`, `clean (M,T)`, `ref_id`, `format='time'` | Conv-TasNet baseline |
+| `preprocess_ambisonics_time(ex_dir, V, th, ph, ...)` | Type C raw dir + steering matrix | `noisy_mic (M,T)`, `clean_mic (M,T)`, `anmt (9,T)`, `clean_anm (T,)`, `format='ambidrop_test'` | Conv-TasNet AmbiDrop test |
+
+`preprocess_ambisonics_time` encodes ASM on-the-fly from raw `p.wav` (no pre-stored `anmt_array` needed) and corrects group delay via `estimate_delay` / `align_to_lag` from `datagenerator/helpers.py`. `SimDS_preprocessed` in `ConvTasNet/datasets.py` dispatches on the `format` key to return the correct tuple shape.
 
 Two batch helpers exist:
 - `preprocess_dataset(raw_dir, out_dir, fn, ...)` — processes one array directory; use this for **Type C test data** so each array stays in its own output directory and per-array metrics can be computed separately.
@@ -167,11 +177,11 @@ encoded_anm = apply_asm_filters(mic_signals, cnm)
 
 ### Where ASM Runs
 
-| Location | Mode |
+| Location | When |
 |----------|------|
-| `datagenerator/generate_inference_ds.py` | Building Type C dataset |
+| `datagenerator/generate_inference_ds.py` | Building Type C dataset (stores `anmt_array` in `anm.mat`) |
 | `FT_JNF/test_real.py` | Real-world Aria inference |
-| `ConvTasNet/datasets.py` (`MicToRealAmbisonicsDataset`) | Conv-TasNet test on raw mics |
+| `ConvTasNet/preprocess.py` (`preprocess_ambisonics_time`) | Conv-TasNet AmbiDrop test preprocessing (on-the-fly from `p.wav`) |
 
 ### Channel Dropout (Training Only)
 **File:** `ambidrop/dropouts.py`
@@ -192,7 +202,7 @@ AmbiDrop/
 │
 ├── ambidrop/             — core library
 │   ├── __init__.py       — public re-exports
-│   ├── constants.py      — STFT params, get_device(), REF_IDX_MAP
+│   ├── constants.py      — STFT params, get_device(), REF_IDX_MAP, get_ref_idx()
 │   ├── checkpoint.py     — save_checkpoint / load_checkpoint
 │   ├── preprocess.py     — preprocess_mic / preprocess_sh_stft / preprocess_sh_time
 │   ├── asm.py            — encode_ambisonics (unified ASM API + tikhonov solver)
@@ -220,7 +230,8 @@ AmbiDrop/
 │   ├── modules.py        — cLN, DepthConv1d, DepthConv2d_Attention
 │   ├── solver.py         — Solver class (training loop)
 │   ├── train.py          — training entry point
-│   ├── datasets.py       — SimDS_preprocessed, MicToRealAmbisonicsDataset
+│   ├── datasets.py       — SimDS_preprocessed (format-sentinel dispatch)
+│   ├── preprocess.py     — preprocess_mic_time / preprocess_ambisonics_time
 │   ├── evaluate.py       — test evaluation helpers
 │   ├── loss.py           — SI-SNR + PIT loss
 │   └── main_results.py   — reproduce Table III results

@@ -90,13 +90,14 @@ def _window_pair(noisy_ct: np.ndarray, clean_ct: np.ndarray, train: bool,
                  onset: int = None) -> tuple:
     """
     Window a (noisy, clean) pair to the canonical length.
-    Both train and test use onset-based windowing so the window always
-    contains speech. train=True uses 6 s; train=False uses 7.5 s.
+    train=True  — onset-based 6 s window (always starts from first speech frame).
+    train=False — full signal returned as-is (no trimming, no onset detection).
     """
+    if not train:
+        return noisy_ct, clean_ct
     if onset is None:
         onset = _find_onset(clean_ct)
-    length = _TRAIN_LEN if train else _TEST_LEN
-    return _slice(noisy_ct, onset, length), _slice(clean_ct, onset, length)
+    return _slice(noisy_ct, onset, _TRAIN_LEN), _slice(clean_ct, onset, _TRAIN_LEN)
 
 
 def _stft(signal_ct: np.ndarray) -> torch.Tensor:

@@ -10,16 +10,16 @@ Public interface:
 
 Usage:
     # AmbiDrop with simulated ATF (default):
-    python run_real_world.py --aria-data-dir datasets/aria_ds/mixed_data_1_5int
+    python run_Real_World.py --aria-data-dir datasets/aria_ds/mixed_data_1_5int
 
     # Override checkpoint:
-    python run_real_world.py --checkpoint checkpoints/FT_JNF/my_model.pt
+    python run_Real_World.py --checkpoint checkpoints/FT_JNF/my_model.pt
 
     # AmbiDrop with measured ATF:
-    python run_real_world.py --atf measured --atf-path datasets/aria_ds/aria_atfs_fixed.sofa
+    python run_Real_World.py --atf measured --atf-path datasets/aria_ds/aria_atfs_fixed.sofa
 
     # Baseline mode:
-    python run_real_world.py --mode baseline --checkpoint checkpoints/FT_JNF/FT_JNF,2026-03-25_13-37-42.pt
+    python run_Real_World.py --mode baseline --checkpoint checkpoints/FT_JNF/FT_JNF,2026-03-25_13-37-42.pt
 
 Architecture is resolved automatically from the checkpoint filename using
 FT_JNF/constants.py CHECKPOINT_REGISTRY. Unrecognised checkpoints fall back

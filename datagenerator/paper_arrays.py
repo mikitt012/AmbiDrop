@@ -80,7 +80,7 @@ _x1 = np.linspace(-0.1, 0.1, 7)
 _pos1 = np.column_stack([_x1, np.zeros(7), np.zeros(7)])
 
 ula_x_axis = ArraySpec(
-    name="ula_x_axis",
+    name="ULA along X-axis",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=_pos1),
 )
@@ -93,14 +93,14 @@ _Ry20 = np.array([[np.cos(_th20), 0,  np.sin(_th20)],
 _pos2 = (_Ry20 @ _pos1.T).T
 
 ula_x_tilted_20 = ArraySpec(
-    name="ula_x_tilted_20",
+    name="ULA along X-axis (tilt=20)",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=_pos2),
 )
 
 # ── Array 3: random sphere 1, ON+IN surface, r=0.1 (free-field) ──────────────
 random_sphere1_on_in_r01 = ArraySpec(
-    name="random_sphere1_on_in_r01",
+    name="random sphere1 radius = 0.1",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=np.array([
         [ 0.0223, -0.0517,  0.0827],
@@ -115,7 +115,7 @@ random_sphere1_on_in_r01 = ArraySpec(
 
 # ── Array 4: random sphere 2, ON+IN surface, r=0.1 (free-field) ──────────────
 random_sphere2_on_in_r01 = ArraySpec(
-    name="random_sphere2_on_in_r01",
+    name="random sphere2 radius = 0.1",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=np.array([
         [ 0.0097, -0.0358, -0.0929],
@@ -130,7 +130,7 @@ random_sphere2_on_in_r01 = ArraySpec(
 
 # ── Array 5: random sphere 1, ON surface, r=0.1 (rigid sphere) ───────────────
 random_sphere1_on_r01 = ArraySpec(
-    name="random_sphere1_on_r01",
+    name="random sphere3 (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(
@@ -144,7 +144,7 @@ random_sphere1_on_r01 = ArraySpec(
 
 # ── Array 6: random sphere 2, ON surface, r=0.1 (rigid sphere) ───────────────
 random_sphere2_on_r01 = ArraySpec(
-    name="random_sphere2_on_r01",
+    name="random sphere4 (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(
@@ -158,7 +158,7 @@ random_sphere2_on_r01 = ArraySpec(
 
 # ── Array 7: random sphere 1, ON surface, r=0.05 (rigid sphere) ──────────────
 random_sphere1_on_r005 = ArraySpec(
-    name="random_sphere1_on_r005",
+    name="random sphere5 (rigid) radius = 0.05",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(
@@ -172,7 +172,7 @@ random_sphere1_on_r005 = ArraySpec(
 
 # ── Array 8: random sphere 2, ON surface, r=0.05 (rigid sphere) ──────────────
 random_sphere2_on_r005 = ArraySpec(
-    name="random_sphere2_on_r005",
+    name="random sphere6 (rigid) radius = 0.05",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(
@@ -189,20 +189,20 @@ _az_fib, _co_fib = _fibonacci_az_co(7)
 _fib_grid = sphereicalGrid(az=_az_fib, co=_co_fib)  # same angular layout for both
 
 uniform_sphere_r01 = ArraySpec(
-    name="uniform_sphere_r01",
+    name="uniform sphere (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(mics_grid=_fib_grid, mic_radius=0.1),
 )
 
 uniform_sphere_r005 = ArraySpec(
-    name="uniform_sphere_r005",
+    name="uniform sphere (rigid) radius = 0.05",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(mics_grid=_fib_grid, mic_radius=0.05),
 )
 
 # ── Array 11: full circle in XY-plane, r=0.1 (rigid sphere) ──────────────────
 full_circle_r01 = ArraySpec(
-    name="full_circle_r01",
+    name="full circle (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=sphereicalGrid(
@@ -215,7 +215,7 @@ full_circle_r01 = ArraySpec(
 
 # ── Array 12: semi-circle in XY-plane, r=0.1 (rigid sphere) ──────────────────
 semi_circle_r01 = ArraySpec(
-    name="semi_circle_r01",
+    name="semi circle (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=sphereicalGrid(
@@ -236,7 +236,7 @@ _idx7 = np.array([0, 1, 2, 4, 6, 7, 8])  # 0-based equiv. of MATLAB 1-based [1,2
 _xy13 = _all13[_idx7]
 
 planar_square_uniform = ArraySpec(
-    name="planar_square_uniform",
+    name="planar",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(
         mic_positions=np.column_stack([_xy13, np.zeros(7)]),
@@ -254,7 +254,7 @@ _R45 = np.array([[np.cos(np.pi / 4), -np.sin(np.pi / 4)],
 _xy14_rot = (_R45 @ _xy14.T).T
 
 planar_square_uniform_rot45 = ArraySpec(
-    name="planar_square_uniform_rot45",
+    name="planar (rot=45deg)",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(
         mic_positions=np.column_stack([_xy14_rot, np.zeros(7)]),
@@ -263,21 +263,21 @@ planar_square_uniform_rot45 = ArraySpec(
 
 # ── Array 15: uniform semi-planar, r=0.1 (free-field) ────────────────────────
 semi_planar_r01 = ArraySpec(
-    name="semi_planar_r01",
+    name="semi circle planar radius = 0.1",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=_semi_planar_pos(0.1)),
 )
 
 # ── Array 16: uniform semi-planar, r=0.05 (free-field) ───────────────────────
 semi_planar_r005 = ArraySpec(
-    name="semi_planar_r005",
+    name="semi circle planar radius = 0.05",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=_semi_planar_pos(0.05)),
 )
 
 # ── Array 17: random planar disc 1, r=0.1 (free-field) ───────────────────────
 random_circle1_r01 = ArraySpec(
-    name="random_circle1_r01",
+    name="random 2D array1 radius = 0.1",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=np.array([
         [-0.0585,  0.0193, 0.0],
@@ -292,7 +292,7 @@ random_circle1_r01 = ArraySpec(
 
 # ── Array 18: random planar disc 2, r=0.1 (free-field) ───────────────────────
 random_circle2_r01 = ArraySpec(
-    name="random_circle2_r01",
+    name="random 2D array2 radius = 0.1",
     array_type="free_field",
     free_field=FreeFieldArrayConfig(mic_positions=np.array([
         [-0.0562, -0.0450, 0.0],
@@ -315,7 +315,7 @@ _y19 = np.concatenate([[0.0],         _Ryz19 * np.cos(_phi19)])
 _z19 = np.concatenate([[0.0],         _Ryz19 * np.sin(_phi19)])
 
 front_hemisphere1 = ArraySpec(
-    name="front_hemisphere1",
+    name="front hemisphere1 (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(_x19, _y19, _z19),
@@ -331,7 +331,7 @@ _y20 = np.concatenate([[0.0],         _Ryz20 * np.cos(_phi20)])
 _z20 = np.concatenate([[0.0],         _Ryz20 * np.sin(_phi20)])
 
 front_hemisphere2 = ArraySpec(
-    name="front_hemisphere2",
+    name="front hemisphere2 (rigid) radius = 0.1",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(_x20, _y20, _z20),
@@ -354,7 +354,7 @@ _aria_m = _aria_cm / 100.0
 _aria_mean_r = float(np.mean(np.linalg.norm(_aria_m, axis=1)))
 
 aria_rigid = ArraySpec(
-    name="aria_rigid",
+    name="Aria on rigid sphere (simulated)",
     array_type="rigid_sphere",
     rigid_sphere=RigidSphereArrayConfig(
         mics_grid=_cart_to_sphere_grid(_aria_m[:, 0], _aria_m[:, 1], _aria_m[:, 2]),

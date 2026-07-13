@@ -1,10 +1,10 @@
 # AmbiDrop: Array-Agnostic Speech Enhancement via Ambisonics Training
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-13_
 
-Standard DNN speech enhancers are trained and tested on the same microphone array, so they fail when deployed on an unseen geometry. AmbiDrop breaks this coupling by training the DNN exclusively on **ideal Ambisonics** — an array-free spherical harmonic (SH) representation — rather than on microphone signals.
+Standard speech enhancement DNNs are trained and tested on the same microphone array, so they fail when deployed on an unseen geometry. AmbiDrop breaks this coupling by training the DNN exclusively on **ideal Ambisonics** — an array-free spherical harmonic (SH) representation — rather than on microphone signals. 
 
-During training, a `SHChannelDropout` layer randomly zeroes up to 3 of the 9 SH channels (order Na=2, ACN convention). This simulates the near-zero channel errors that Array Signal Matching (ASM) produces for ill-conditioned frequency bins, bridging the train/inference domain gap. At inference, ASM encodes any real microphone array into the Ambisonics domain via a Tikhonov-regularised steering matrix inversion — and the already-trained model runs unchanged. **The DNN never sees raw mic signals or ASM-encoded signals during training.**
+During training, a input channel-wise dropout layer randomly zeroes some of the 9 SH channels (order Na=2, ACN convention). This simulates the near-zero channel errors that Ambisonics Signal Matching (ASM) produces for poorly estimated channels, bridging the train/inference domain gap. At inference, ASM encodes any real microphone array into the Ambisonics domain via ASM — and the already-trained model runs unchanged. **The DNN never sees raw mic signals or ASM-encoded signals during training.**
 
 **Training**
 
@@ -38,7 +38,7 @@ python run_FT_JNF.py --mode both --actions generate preprocess train test
 # 4. Evaluate on real Project Aria glasses recordings (requires datasets/aria_ds/)
 python run_Real_World.py --atf simulated
 
-# 5. IC Conv-TasNet — identical structure
+# 5. IC Conv-TasNet — same four phases, see differences in run_ConvTasNet.py section below
 python run_ConvTasNet.py --mode ambidrop --actions generate preprocess train test
 ```
 
@@ -52,6 +52,8 @@ python run_ConvTasNet.py --mode ambidrop --actions test
 The 21 microphone arrays used in the paper are predefined in `datagenerator/paper_arrays.py` (`PAPER_ARRAYS_TRAIN`, `PAPER_ARRAYS_TEST`). Set these in the USER CONFIG block to reproduce the exact paper experiments.
 
 For benchmark numbers see the paper.
+
+> **Note on reproducibility:** The original paper experiments used a MATLAB-based data generation pipeline. This repository re-implements data generation in Python using the `shroom` library. Even when using identical array geometries and parameters (`PAPER_ARRAYS_TRAIN` / `PAPER_ARRAYS_TEST`), numerical differences in the room simulation and ATF computation mean that reproduced results will be close to but not identical to the published numbers.
 
 ---
 
@@ -117,8 +119,16 @@ Two independent axes of control:
 | `--checkpoint PATH` | Override checkpoint for test (single mode) |
 | `--checkpoint-baseline PATH` | Override baseline checkpoint when `--mode both` |
 | `--checkpoint-ambidrop PATH` | Override ambidrop checkpoint when `--mode both` |
-| `--test-raw-dir PATH` | Point test phase at a different raw data directory |
-| `--legacy-eval-dir PATH` | Evaluate on a pre-existing evaluation directory |
+| `--test-arrays {test,train,both}` | Which array geometries to evaluate; default `both` |
+| `--test-raw-dir-test PATH` | Raw Type-C directory for test arrays |
+| `--test-raw-dir-train PATH` | Raw Type-C directory for train arrays; enables train-array evaluation |
+| `--legacy-eval-dir PATH` | Evaluate on a pre-existing preprocessed directory |
+| `--raw-baseline-train/val PATH` | Existing raw baseline directories (skips generate for those splits) |
+| `--raw-ambidrop-train/val PATH` | Existing raw AmbiDrop directories (skips generate for those splits) |
+| `--prep-baseline-train/val PATH` | Already-preprocessed directories (skips preprocess) |
+| `--prep-ambidrop-train/val PATH` | Already-preprocessed directories (skips preprocess) |
+| `--wandb-project / --wandb-entity / --wandb-run-name` | W&B logging config |
+| `--no-wandb` | Disable W&B logging |
 
 **Common `--actions` combinations**
 
@@ -144,9 +154,12 @@ python run_FT_JNF.py --mode baseline --actions preprocess train test
 
 ### `run_ConvTasNet.py` — IC Conv-TasNet end-to-end
 
-Identical `--mode` and `--actions` structure to `run_FT_JNF.py`. Key differences:
-- Preprocessed data is **time-domain real ACN**, not STFT, since Conv-TasNet operates on waveforms
-- `--mode baseline` uses 7-ch mic waveforms; `--mode ambidrop` uses 9-ch real ACN
+Same `--mode` and `--actions` structure as `run_FT_JNF.py`. Key differences from the FT-JNF wrapper:
+- Preprocessed data is **time-domain real ACN**, not STFT — Conv-TasNet operates on waveforms
+- **AmbiDrop test preprocessing encodes ASM on-the-fly** from raw `p.wav` (via `ConvTasNet/preprocess.py`) using a **real** SH matrix, since Conv-TasNet operates on real-valued ACN signals — this differs from the data generation step, which uses complex SH
+- **No W&B logging flags** (`--wandb-*`, `--no-wandb` are not available)
+- **No `--legacy-eval-dir`**
+- **`--test-arrays` defaults to `test`** (not `both`)
 
 ```bash
 python run_ConvTasNet.py --mode ambidrop --actions generate preprocess train test
@@ -171,6 +184,9 @@ Evaluates FT-JNF on real Project Aria glasses recordings. Architecture is resolv
 | `--checkpoint PATH` | preferred AmbiDrop ckpt | FT-JNF checkpoint |
 | `--aria-data-dir PATH` | `datasets/aria_ds` | Root directory with scenario subdirectories |
 | `--atf {simulated,measured}` | `simulated` | ATF source: rigid-sphere model or measured SOFA |
+| `--atf-path PATH` | — | Path to SOFA file when `--atf measured` (convenience alias for `--sofa-path`) |
+| `--steering-path PATH` | `datasets/…/Aria on rigid sphere (simulated).mat` | Override steering matrix for simulated ATF |
+| `--grid-path PATH` | `datasets/…/Lebvedev2702.mat` | Override quadrature grid for simulated ATF |
 | `--sofa-path PATH` | `datasets/aria_ds/aria_atfs_fixed.sofa` | Override path to measured SOFA file |
 | `--atf-npy-path PATH` | `datasets/aria_ds/ATF.npy` | Override path to precomputed ATF `.npy` |
 | `--cnm-path PATH` | — | Path to precomputed cnm `.npy` (shape `M × nm × F_full`); activates precomputed path |
@@ -209,7 +225,7 @@ np.save("datasets/aria_ds/cnm_shroom.npy", asm.cnm.data)  # (M, nm, F_full)
 
 ## Data Generation
 
-Data is generated by the three scripts in `datagenerator/`. All types share the same room simulation pipeline: random rooms via `pyroomacoustics` (ISM), array ATFs from `shroom`, speech from WSJ0. The target speaker is always rotated to azimuth 0 before encoding.
+Data is generated by the three scripts in `datagenerator/`. All types share the same room simulation pipeline: random rooms simulated with `shroom` (a spherical-harmonic extension of `pyroomacoustics`), array ATFs computed by `shroom`, speech from WSJ0. One target speaker is placed at a random position in the room, then the array is rotated so the target lands at azimuth 0 relative to it. Five additional interferers are placed at random positions in the same room. All signals are simulated in the SH domain at order 20 and then truncated to order 2.
 
 | Type | Script | Output files | Used for |
 |------|--------|-------------|---------|

@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import torch
 from torch.utils.data import DataLoader
 
-from ConvTasNet.datasets import MergedDataset, MatDataset, SimDS_preprocessed
+from ConvTasNet.datasets import SimDS_preprocessed
 from ConvTasNet.solver import Solver
 import ConvTasNet.model as conv_tasnet_model
 import wandb
@@ -102,18 +102,8 @@ def main(args):
                 "dropout_type": args.dropout_type,
             })
 
-    has_mat = any(f.endswith('.mat') for f in os.listdir(args.train_dir))
-    has_pt = any(f.endswith('.pt') for f in os.listdir(args.train_dir))
-
-    if has_mat:
-        tr_dataset = MatDataset(args.train_dir)
-        cv_dataset = MatDataset(args.valid_dir)
-    elif has_pt:
-        tr_dataset = SimDS_preprocessed(args.train_dir, '.', mode=args.mode)
-        cv_dataset = SimDS_preprocessed(args.valid_dir, '.', mode=args.mode)
-    else:
-        tr_dataset = MergedDataset(args.train_dir)
-        cv_dataset = MergedDataset(args.valid_dir)
+    tr_dataset = SimDS_preprocessed(args.train_dir, '.', mode=args.mode)
+    cv_dataset = SimDS_preprocessed(args.valid_dir, '.', mode=args.mode)
 
     tr_loader = DataLoader(tr_dataset, batch_size=args.batch_size,
                            shuffle=True, num_workers=args.num_workers)

@@ -8,7 +8,7 @@ Public interface:
     process_segment — onset-detect and window a (noisy, clean) tensor pair
     zero_random_channels — zero n random SH channels (excluding a00) in a [1,T,F,2C] tensor
     get_lr — return the current learning rate from an optimizer
-    find_ref_mic — return 0-based index of mic closest to azimuth 0
+    find_ref_mic — return 0-based index of mic closest to the positive x-axis direction
     complex_acn_to_real_acn — convert complex ACN Ambisonics to real-valued ACN representation
     tensor_to_istft — invert an STFT tensor (T_frames, F, 2C) back to time domain (C, T)
 """
@@ -121,15 +121,20 @@ def get_lr(optimizer):
 
 # ── Reference microphone geometry ───────────────────────────────────────────
 
-def find_ref_mic(mics_az: np.ndarray) -> int:
-    """Return 0-based index of mic closest to azimuth 0 (target speaker direction).
+def find_ref_mic(mic_positions: np.ndarray) -> int:
+    """Return 0-based index of mic closest to the target speaker direction.
 
-    Handles wrap-around so that an azimuth near 2π is correctly treated as close
-    to 0. Used as a fallback when the array name is not in REF_IDX_MAP.
+    The target speaker is assumed to be on the positive x-axis.  The reference
+    point is placed at (r_mean, 0, 0) where r_mean is the mean mic-to-origin
+    distance, so the comparison is fair across mics that may differ in distance
+    from the origin.
+
+    mic_positions: (M, 3) array of 3D Cartesian mic coordinates.
     """
-    az = np.asarray(mics_az, dtype=float) % (2 * np.pi)
-    dist = np.minimum(az, 2 * np.pi - az)
-    return int(np.argmin(dist))
+    pos = np.asarray(mic_positions, dtype=float)
+    r_mean = np.mean(np.linalg.norm(pos, axis=1))
+    ref = np.array([r_mean, 0.0, 0.0])
+    return int(np.argmin(np.linalg.norm(pos - ref, axis=1)))
 
 
 # ── Ambisonics / STFT conversion helpers ────────────────────────────────────

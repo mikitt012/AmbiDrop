@@ -127,20 +127,15 @@ class Solver(object):
 
         for i, data in enumerate(data_loader):
             if isinstance(data, (tuple, list)) and len(data) >= 5:
+                # Baseline: 5-tuple from preprocess_mic_time, per-sample ref_id
                 noisy_batch, clean_batch, ref_ids, _, _ = data
                 batch_idx = torch.arange(clean_batch.shape[0]).to(clean_batch.device)
                 clean_ref_mic = clean_batch[batch_idx, ref_ids, :]
-            elif isinstance(data, (tuple, list)) and len(data) == 2:
-                noisy_batch, clean_batch = data
-                ref_ids = None
-                if clean_batch.dim() == 3 and clean_batch.shape[1] > 1:
-                    clean_ref_mic = clean_batch[:, 0, :]
-                else:
-                    clean_ref_mic = clean_batch.squeeze(1) if clean_batch.dim() == 3 else clean_batch
             else:
+                # AmbiDrop: 2-tuple from preprocess_sh_time, clean is already a00 (B, T)
                 noisy_batch, clean_batch = data[0], data[1]
                 ref_ids = None
-                clean_ref_mic = clean_batch.squeeze(1) if clean_batch.dim() == 3 else clean_batch
+                clean_ref_mic = clean_batch
 
             clean_energy = torch.sqrt(torch.mean(clean_ref_mic**2, dim=-1))
             if (clean_energy < 1e-4).any():

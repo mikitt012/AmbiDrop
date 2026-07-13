@@ -38,12 +38,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from scipy.io import loadmat
-
-from ConvTasNet.datasets import SimDS_preprocessed, MatDatasetTest_ASM
+from ConvTasNet.datasets import SimDS_preprocessed
 import ConvTasNet.model as conv_tasnet_model
 from ConvTasNet.utils import remove_pad
-from ambidrop.constants import REF_IDX_MAP
+from ambidrop.constants import get_ref_idx
 from pesq import pesq
 from pystoi import stoi
 import wandb
@@ -76,9 +74,7 @@ def cal_sisnr(ref_sig, out_sig, eps=1e-8):
 
 def get_ref_id(test_type):
     """Get 0-based reference mic index from array name."""
-    clean_name = test_type.removesuffix("_preprocessed")
-    key = test_type if test_type in REF_IDX_MAP else clean_name + "_preprocessed"
-    return REF_IDX_MAP.get(key, 1) - 1
+    return get_ref_idx(test_type) - 1  # get_ref_idx returns 1-based
 
 
 def evaluate(args):
@@ -92,11 +88,6 @@ def evaluate(args):
     if args.use_cuda and torch.cuda.is_available():
         model.cuda()
 
-    steering_dir = os.path.join(os.path.dirname(__file__), '..',
-                                'datasets', 'experiment_full_anm', 'steering')
-    grid_path = os.path.join(os.path.dirname(__file__), '..',
-                             'datasets', 'experiment_full_anm', 'utils', 'Lebvedev2702.mat')
-
     test_types = sorted([
         d for d in os.listdir(args.data_dir)
         if os.path.isdir(os.path.join(args.data_dir, d)) and not d.startswith('.')
@@ -106,17 +97,7 @@ def evaluate(args):
         array_name = test_type.removesuffix("_preprocessed")
         ref_id = get_ref_id(test_type)
 
-        if args.mode == 'ambidrop':
-            steer_path = os.path.join(steering_dir, f"{array_name}.mat")
-            if not os.path.exists(steer_path):
-                print(f"Skipping {test_type}: steering not found")
-                continue
-            V = loadmat(steer_path)["V"]
-            grid_mat = loadmat(grid_path)
-            th, ph = grid_mat["th"].squeeze(), grid_mat["ph"].squeeze()
-            test_ds = MatDatasetTest_ASM(os.path.join(args.data_dir, test_type), V, th, ph)
-        else:
-            test_ds = SimDS_preprocessed(os.path.join(args.data_dir, test_type), '.', mode='baseline')
+        test_ds = SimDS_preprocessed(os.path.join(args.data_dir, test_type), '.', mode=args.mode)
 
         data_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
@@ -133,20 +114,18 @@ def evaluate(args):
             for data in data_loader:
                 noisy_mic_batch = None
 
-                if isinstance(data, (tuple, list)) and len(data) == 4:
-                    noisy_mic_batch, clean_mic, noisy_batch, clean_batch = data
+                if len(data) == 5 and isinstance(data[3], torch.Tensor):
+                    # AmbiDrop test: (noisy_mic, clean_mic, anmt, clean_anm, ref_id)
+                    # data[3] is a tensor (clean_anm), distinguishing from baseline where
+                    # data[3] is a list of strings (array_name)
+                    noisy_mic_batch, clean_mic, noisy_batch, clean_batch, per_ref_ids = data
+                    ref_id = int(per_ref_ids[0])
                     ref_ids_tensor = None
-                elif isinstance(data, (tuple, list)) and len(data) >= 5:
+                else:
+                    # Baseline: (noisy, clean, ref_ids, array_name, ex_id)
                     noisy_batch, clean_batch, ref_ids_tensor, _, _ = data
                     batch_idx = torch.arange(clean_batch.shape[0])
                     clean_batch = clean_batch[batch_idx, ref_ids_tensor, :]
-                else:
-                    noisy_batch, clean_batch = data[0], data[1]
-                    ref_ids_tensor = torch.full((noisy_batch.shape[0],), ref_id, dtype=torch.long)
-                    if clean_batch.dim() == 3 and clean_batch.shape[1] > 1:
-                        clean_batch = clean_batch[:, ref_id, :]
-                    elif clean_batch.dim() == 3:
-                        clean_batch = clean_batch.squeeze(1)
 
                 clean_energy = torch.sqrt(torch.mean(clean_batch**2, dim=-1))
                 if (clean_energy < 1e-4).any():

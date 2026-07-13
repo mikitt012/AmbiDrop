@@ -155,7 +155,7 @@ def steering_vector(mic_positions, theta_vec, phi_vec, f_vec, c=SPEED_OF_SOUND):
         np.cos(theta_vec),
     ], axis=0)  # (3, K)
     tau = (mic_positions @ u) / c  # (M, K)
-    return np.exp(1j * 2 * np.pi * f_vec[None, None, :] * tau[:, :, None])  # (M, K, F)
+    return np.exp(-1j * 2 * np.pi * f_vec[None, None, :] * tau[:, :, None])  # (M, K, F)
 
 
 def build_free_field_array(mic_positions, source_grid, fs, duration):
