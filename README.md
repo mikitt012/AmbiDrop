@@ -18,6 +18,8 @@ Two DNN architectures are provided:
 - **FT-JNF** — stacked BiLSTM processing first frequency then time axes, outputting a complex IRM mask applied to the a₀₀ (omni) channel. Operates in the STFT domain on 9-channel complex SH input (18 real/imag dims).
 - **IC Conv-TasNet** — Conv1d encoder → dilated TCN with inter-channel attention → ConvTranspose1d decoder. Operates directly in the time domain on 9-channel real ACN SH input.
 
+**Paper:** [AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement](https://arxiv.org/abs/2607.00548) — M. Tatarjitzky, V. Tourbabin, B. Rafaely
+
 ---
 
 ## Quick Start
