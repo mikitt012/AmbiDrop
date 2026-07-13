@@ -1,4 +1,4 @@
-# AmbiDrop: Array-Agnostic Speech Enhancement via Ambisonics Training
+# AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement
 
 _Last updated: 2026-07-13_
 
