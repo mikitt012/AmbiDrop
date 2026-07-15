@@ -19,6 +19,21 @@ DOCS.md
 
 # One-off scripts
 smoke_test.py
+smoke_noisy_sisdr.py
+
+# Local work-in-progress (not part of the published pipeline)
+FT_JNF/bsm_standalone.py
+FT_JNF/test_simulated_multichannel.py
+
+# Web demo — developed in a separate repo, never published from this one.
+# (.gitignore only hides untracked files; none of these has ever been committed
+# here, so this is enough. A file force-added with `git add -f` would stay
+# tracked until `git rm --cached`.)
+gui/
+Dockerfile
+.dockerignore
+GUI_ARCHITECTURE.md
+GUI_PROMPT.md
 
 # Results / outputs
 snr_distribution_fixed/

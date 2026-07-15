@@ -91,7 +91,7 @@ def parse_args():
 
 
 def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0,
-                   ref_id=None, array_name=None):
+                   ref_id=None, array_name=None, return_waveforms=False):
     """Evaluate a model on one array type. Returns dict of metric arrays.
 
     ref_id: 0-based reference mic index. When provided, takes priority over
@@ -99,6 +99,12 @@ def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0,
     subdirectory name like 'baseline_test' rather than an array name).
     array_name: used for REF_IDX_MAP lookup when ref_id is not provided.
     Falls back to test_type for legacy callers that pass the array name there.
+
+    return_waveforms: when True, additionally return a list (one dict per
+    example) of the normalised time-domain signals — {'enhanced', 'noisy',
+    'clean'} as numpy float32 at 16 kHz — for listening to the results rather
+    than only scoring them. Default False keeps the return type and every
+    existing caller's behaviour unchanged.
     """
     test_ds = SimDS_preprocessed(data_dir, test_type)
     testloader = DataLoader(test_ds, batch_size=1, shuffle=False)
@@ -112,6 +118,7 @@ def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0,
         'pesq_noisy': [], 'pesq_enhanced': [],
         'stoi_noisy': [], 'stoi_enhanced': [],
     }
+    waveforms = []  # per-example normalised signals when return_waveforms=True
 
     win = torch.hamming_window(WIN_LENGTH, device=device)
 
@@ -208,9 +215,18 @@ def evaluate_array(net, test_type, data_dir, mode, device, zero_channels=0,
         except NoUtterancesError:
             metrics['pesq_enhanced'].append(float('nan'))
 
+        if return_waveforms:
+            waveforms.append({
+                'enhanced': s_hat_cpu.numpy().astype(np.float32),   # model output
+                'noisy':    y_noisy_cpu.numpy().astype(np.float32),  # reference-mic noisy
+                'clean':    s1_cpu.numpy().astype(np.float32),       # direct-path target
+            })
+
     for k in metrics:
         metrics[k] = np.array(metrics[k])
 
+    if return_waveforms:
+        return metrics, waveforms
     return metrics
 
 
