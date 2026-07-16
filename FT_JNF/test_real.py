@@ -318,12 +318,12 @@ def main():
     device = get_device()
     torch.set_default_device(device)
 
-    base_dir = os.path.join(os.path.dirname(__file__), '..', 'datasets', 'experiment_full_anm')
+    base_dir = os.path.join(os.path.dirname(__file__), '..', 'utils')
 
     if args.atf == 'simulated':
         steering_path = args.steering_path or os.path.join(
             base_dir, 'steering', 'Aria on rigid sphere (simulated).mat')
-        grid_path = args.grid_path or os.path.join(base_dir, 'utils', 'Lebvedev2702.mat')
+        grid_path = args.grid_path or os.path.join(base_dir, 'Lebvedev2702.mat')
         V, th, ph, fs = load_simulated_atf(steering_path, grid_path)
         print("---- simulated ATF ----")
     else:

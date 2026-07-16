@@ -26,7 +26,7 @@ from shroom.acoustics.physics import SPEED_OF_SOUND
 from shroom.geometry.sampling import sphereicalGrid
 from shroom.utils.dsp_utils import reconstruct_neg_frequency_spectrum
 
-DEFAULT_PRECOMPUTED_GRID_PATH = "datasets/experiment_full_anm/utils/Lebvedev2702.mat"
+DEFAULT_PRECOMPUTED_GRID_PATH = "utils/Lebvedev2702.mat"
 
 
 @dataclass
@@ -171,7 +171,7 @@ def build_free_field_array(mic_positions, source_grid, fs, duration):
 
 def load_precomputed_array(path, fs, grid_path=DEFAULT_PRECOMPUTED_GRID_PATH):
     """
-    Load a precomputed steering matrix from datasets/experiment_full_anm/steering/*.mat
+    Load a precomputed steering matrix from utils/steering/*.mat
     (key "V", shape (M, F_pos, Q), positive frequencies only, generated at
     Fs=16000/nfft=512 in experiment_data_gen_3D.m) on the shared Lebedev-2702
     source grid, and wrap it in the same frequency-domain, space-domain

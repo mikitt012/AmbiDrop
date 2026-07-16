@@ -118,8 +118,8 @@ ARRAYS = [
         name="precomputed_full_circle_r0.1",
         array_type="precomputed",
         precomputed=PrecomputedArrayConfig(
-            array_path="datasets/experiment_full_anm/steering/full circle (rigid) radius = 0.1.mat",
-            grid_path="datasets/experiment_full_anm/utils/Lebvedev2702.mat",
+            array_path="utils/steering/full circle (rigid) radius = 0.1.mat",
+            grid_path="utils/Lebvedev2702.mat",
         ),
     ),
 ]
@@ -222,7 +222,7 @@ def load_speech_signals(speech_dir, n_signals, rng):
 def build_array_processors(array_spec):
     """Build (asm, array_decoder) for one array geometry."""
     # source_grid = from_fibonacci_grid(SOURCE_GRID_POINTS)
-    grid_mat = scipy.io.loadmat("datasets/experiment_full_anm/utils/Lebvedev2702.mat")
+    grid_mat = scipy.io.loadmat("utils/Lebvedev2702.mat")
     source_grid = sphereicalGrid(az=grid_mat["ph"].ravel(), co=grid_mat["th"].ravel())
     array_freq = build_array(
         array_spec.array_type, source_grid, FS, ARRAY_DURATION_SEC,

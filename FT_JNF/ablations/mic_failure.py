@@ -247,9 +247,9 @@ def main():
     device = get_device()
 
     steering_dir = os.path.join(os.path.dirname(__file__), '..', '..',
-                                'datasets', 'experiment_full_anm', 'steering')
+                                'utils', 'steering')
     grid_path = os.path.join(os.path.dirname(__file__), '..', '..',
-                             'datasets', 'experiment_full_anm', 'utils', 'Lebvedev2702.mat')
+                             'utils', 'Lebvedev2702.mat')
     grid_mat = loadmat(grid_path)
     th, ph = grid_mat["th"].squeeze(), grid_mat["ph"].squeeze()
 

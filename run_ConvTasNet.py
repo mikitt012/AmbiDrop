@@ -454,7 +454,7 @@ def _build_steering_matrix(array_spec):
     """
     import scipy.io
     from shroom.geometry.sampling import sphereicalGrid  # noqa: lazy import
-    grid_mat    = scipy.io.loadmat("datasets/experiment_full_anm/utils/Lebvedev2702.mat")
+    grid_mat    = scipy.io.loadmat("utils/Lebvedev2702.mat")
     source_grid = sphereicalGrid(az=grid_mat["ph"].ravel(), co=grid_mat["th"].ravel())
     array_freq  = build_array(
         array_spec.array_type, source_grid, FS, ARRAY_DURATION_SEC,

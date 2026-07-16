@@ -77,8 +77,8 @@ ARIA_DATA_DIR = "datasets/aria_ds"
 ATF = "simulated"
 
 # Simulated ATF files — only needed when ATF="simulated".
-STEERING_PATH = "datasets/experiment_full_anm/steering/Aria on rigid sphere (simulated).mat"
-GRID_PATH     = "datasets/experiment_full_anm/utils/Lebvedev2702.mat"
+STEERING_PATH = "utils/steering/Aria on rigid sphere (simulated).mat"
+GRID_PATH     = "utils/Lebvedev2702.mat"
 
 # Measured ATF files — only needed when ATF="measured".
 SOFA_PATH    = "datasets/aria_ds/aria_atfs_fixed.sofa"
