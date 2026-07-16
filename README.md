@@ -1,10 +1,42 @@
 # AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement
 
+
+<p align="center">
+
+![Python](https://img.shields.io/badge/Python-3.9-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![arXiv](https://img.shields.io/badge/arXiv-2607.00548-b31b1b)
+
+</p>
+
+<p align="center">
+  <strong>Train once. Enhance speech on arbitrary microphone arrays.</strong>
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2607.00548">📄 Paper</a> •
+  <a href="https://huggingface.co/spaces/mikitt012/AmbiDrop-Demo">🤗 Interactive Demo</a>
+</p>
+
 _Last updated: 2026-07-13_
 
-Standard speech enhancement DNNs are trained and tested on the same microphone array, so they fail when deployed on an unseen geometry. AmbiDrop breaks this coupling by training the DNN exclusively on **ideal Ambisonics** — an array-free spherical harmonic (SH) representation — rather than on microphone signals. 
+Standard multichannel speech enhancement models are typically trained and evaluated on a fixed microphone array geometry, which often limits their ability to generalize to unseen arrays.
 
-During training, a input channel-wise dropout layer randomly zeroes some of the 9 SH channels (order Na=2, ACN convention). This simulates the near-zero channel errors that Ambisonics Signal Matching (ASM) produces for poorly estimated channels, bridging the train/inference domain gap. At inference, ASM encodes any real microphone array into the Ambisonics domain via ASM — and the already-trained model runs unchanged. **The DNN never sees raw mic signals or ASM-encoded signals during training.**
+AmbiDrop addresses this limitation by training the DNN exclusively on **ideal Ambisonics**, an array-independent spherical harmonic (SH) representation of the sound field, instead of raw microphone signals.
+
+During training, a channel-wise dropout layer randomly suppresses some of the Ambisonics channels. This mimics the degraded or near-zero channels that may arise when Ambisonics Signal Matching (ASM) reconstructs the sound field from arbitrary microphone arrays, reducing the train/inference domain mismatch.
+
+During inference, microphone signals from any supported array geometry are encoded into the Ambisonics domain using ASM, and the already-trained model is applied without modification.
+
+> **Key idea:** the DNN never sees raw microphone signals or ASM-encoded signals during training—it learns directly from an idealized, geometry-independent representation of the sound field.
+
+### Highlights
+
+- ✅ Generalizes to unseen microphone array geometries
+- ✅ Compatible with multiple DNN architectures
+- ✅ Robust to missing microphones
+- ✅ Evaluated on both simulated arrays and real Project Aria recordings
+- ✅ Maintains competitive performance with substantially smaller networks
 
 **Training**
 
@@ -14,17 +46,43 @@ During training, a input channel-wise dropout layer randomly zeroes some of the 
 
 ![Inference Pipeline](assets/fig_inference_pipeline.png)
 
-Two DNN architectures are provided:
-- **FT-JNF** — stacked BiLSTM processing first frequency then time axes, outputting a complex IRM mask applied to the a₀₀ (omni) channel. Operates in the STFT domain on 9-channel complex SH input (18 real/imag dims).
+Two DNN architectures are currently provided:
+
+- **FT-JNF** — stacked BiLSTM processing first frequency then time axes, outputting a complex IRM mask applied to the a₀₀ (omni) channel. Operates in the STFT domain on 9-channel complex SH input (18 real/imag dimensions).
 - **IC Conv-TasNet** — Conv1d encoder → dilated TCN with inter-channel attention → ConvTranspose1d decoder. Operates directly in the time domain on 9-channel real ACN SH input.
 
-**Paper:** [AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement](https://arxiv.org/abs/2607.00548) — M. Tatarjitzky, V. Tourbabin, B. Rafaely
+**Paper:** [AmbiDrop: Ambisonics-Based Array-Agnostic Neural Speech Enhancement](https://arxiv.org/abs/2607.00548)  
+**Authors:** Michael Tatarjitzky, Vladimir Tourbabin, Boaz Rafaely
+
+---
+
+## Demo
+
+Try AmbiDrop directly in your browser:
+
+👉 https://huggingface.co/spaces/mikitt012/AmbiDrop-Demo
+
+The interactive demo allows you to:
+
+- create a virtual 3D acoustic scene with a target speaker and interfering speakers,
+- position the speakers anywhere in the room,
+- choose one of the microphone arrays used in the paper or design your own array geometry,
+- select different speech recordings for each speaker,
+- run AmbiDrop and hear how the enhancement changes with different array geometries and acoustic scenes.
+
+<p align="center">
+  <img src="assets/demo-scene.png" width="32%">
+  <img src="assets/demo-array.png" width="32%">
+  <img src="assets/demo-results.png" width="32%">
+</p>
+
+*Example screenshots from the interactive demo.*
 
 ---
 
 ## Quick Start
 
-Since datasets are not included in the repository, the full pipeline starts from data generation. You will need the [WSJ0 corpus](https://catalog.ldc.upenn.edu/LDC93S6A) and must set `WSJ0_ROOT` in the `# === USER CONFIG ===` block at the top of the wrapper script before running.
+Datasets are not included in the repository, so the full pipeline starts from data generation. You will need the [WSJ0 corpus](https://catalog.ldc.upenn.edu/LDC93S6A) and must set `WSJ0_ROOT` in the `# === USER CONFIG ===` block at the top of the wrapper script before running.
 
 ```bash
 # 1. Install
@@ -53,7 +111,7 @@ python run_ConvTasNet.py --mode ambidrop --actions test
 
 The 21 microphone arrays used in the paper are predefined in `datagenerator/paper_arrays.py` (`PAPER_ARRAYS_TRAIN`, `PAPER_ARRAYS_TEST`). Set these in the USER CONFIG block to reproduce the exact paper experiments.
 
-For benchmark numbers see the paper.
+For complete benchmark results and ablation studies, see the paper.
 
 > **Note on reproducibility:** The original paper experiments used a MATLAB-based data generation pipeline. This repository re-implements data generation in Python using the `shroom` library. Even when using identical array geometries and parameters (`PAPER_ARRAYS_TRAIN` / `PAPER_ARRAYS_TEST`), numerical differences in the room simulation and ATF computation mean that reproduced results will be close to but not identical to the published numbers.
 
@@ -235,7 +293,7 @@ Data is generated by the three scripts in `datagenerator/`. All types share the 
 | **B — Mic signals** | `generate_baseline_train_ds.py` | `p.wav` (7-ch noisy), `pDirect.wav` (7-ch clean) | Baseline training / validation |
 | **C — Mic + ASM** | `generate_inference_ds.py` | Type B files + `anmt_array` (ASM-encoded SH) in `anm.mat` | Test evaluation on unseen arrays |
 
-Type C is the key evaluation format: it tests whether ASM-encoded signals from a physical array can be enhanced by a model trained only on ideal SH (Type A). The array geometries used for generation are defined in the `ARRAYS_TRAIN` / `ARRAYS_TEST` constants in the wrapper's USER CONFIG block.
+Type C is the primary evaluation format: it tests whether ASM-encoded signals from a physical array can be enhanced by a model trained only on ideal SH (Type A). The array geometries used for generation are defined in the `ARRAYS_TRAIN` / `ARRAYS_TEST` constants in the wrapper's USER CONFIG block.
 
 > **Paper arrays:** The exact 21 microphone arrays used in the paper (10 training + 11 test) are predefined in `datagenerator/paper_arrays.py` as `PAPER_ARRAYS_TRAIN`, `PAPER_ARRAYS_TEST`, and `PAPER_ARRAYS_ALL`. Import these directly and assign them to the `ARRAYS_TRAIN` / `ARRAYS_TEST` config variables in the wrapper scripts to reproduce paper results. The file also includes a `plot_paper_arrays()` function for visualising array geometries.
 
@@ -337,11 +395,11 @@ AmbiDrop/
 
 ## Documentation
 
-| File | Contents |
-|------|----------|
-| `README.md` | Project overview, quick start, wrapper script reference |
-| `CODEBASE_OVERVIEW.md` | Neural network internals, data pipeline, checkpoints, ASM formula |
-| `USAGE.md` | Complete CLI flags for every script, preprocessing API, ASM API |
+| File | Description |
+|------|-------------|
+| `README.md` | Project overview and quick start |
+| `CODEBASE_OVERVIEW.md` | Internal architecture, data pipeline and checkpoint organisation |
+| `USAGE.md` | Complete CLI and API reference |
 
 ---
 
