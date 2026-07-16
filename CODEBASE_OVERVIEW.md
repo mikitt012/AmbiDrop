@@ -247,6 +247,13 @@ AmbiDrop/
 │   ├── FT_JNF/           — 40 .pt checkpoint files (see CHECKPOINT_REGISTRY)
 │   └── ConvTasNet/       — 3 run directories with final.pth.tar
 │
+├── utils/                — vendored data the pipeline needs (so a fresh clone runs;
+│   │                       the full datasets/ tree is gitignored)
+│   ├── Lebvedev2702.mat  — Lebedev-2702 quadrature grid (regular git, 11 KB)
+│   └── steering/         — the two precomputed steering matrices the scripts use
+│                           (Aria on rigid sphere, full circle rigid), via Git LFS.
+│                           Code loads grid/steering from utils/ — no datasets/ path.
+│
 ├── CODEBASE_OVERVIEW.md  — this file
 ├── USAGE.md              — full CLI and API reference
 └── environment.yml       — Conda environment
